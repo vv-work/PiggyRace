@@ -1,36 +1,51 @@
-# PiggyRace — Step-by-Step Plan (Agent + You)
+# PiggyRace — Step‑by‑Step TODO (NGO)
 
-Shared checklist for building a Netcode for GameObjects (NGO) game together. Each step lists what the Agent patches and what You validate in Unity.
+Shared checklist for building a Netcode for GameObjects (NGO) game. Each item is small, actionable, and marked for Agent or You.
 
-## 0) Project Plumbing
-- Agent: ensure packages (NGO 2.5.0, Unity Transport, Input System) in `Packages/manifest.json`; add `NetworkManager` prefab and config; create scenes `MainMenu`, `Lobby`, `Race`; simple `GameBootstrap`.
-- You: open with Unity 6.2, import packages, assign bootstrap scene, press Play to smoke test.
-- Done when: editor opens cleanly and playmode runs without errors.
+## Phace 0 — Preflight & Packages
+- [ ] Agent: Confirm Unity 6.2, NGO 2.5.0, Input System in `Packages/manifest.json`.
+- [ ] Agent: Bump Unity Transport to a compatible version if Unity requests it.
+- [ ] Agent: Create folders `Assets/Scripts/{Core,Gameplay,UI,Networking}`.
+- [ ] Agent: Add `PiggyRace.Runtime.asmdef` refs (Unity.InputSystem; add NGO refs when used).
+- [ ] Agent: Add `NetworkManager` prefab (UTP configured) in `Assets/Prefabs/Systems`.
+- [ ] Agent: Create scenes `MainMenu`, `Lobby`, `Race` (placeholders) in `Assets/Scenes`.
+- [ ] You: Open project, let packages import, press Play on an empty scene to smoke test.
 
-## 1) Core Movement & Camera
-- Agent: implement `PigMotor` + `PigController` (pure logic emphasized); add tests; add follow camera or Cinemachine rig.
-- You: wire `PigPlayer` prefab with `NetworkObject`; tweak curves and camera; validate feel on a graybox.
-- Done when: local pig drives stably at 60 Hz.
+## Phace 1 — Local Movement (Offline)
+- [ ] Agent: Implement `TractorModel` (done) and `TractorMotor` (done) with tests.
+- [ ] You: Drop `TractorMotor` in a scene; verify WASD + Space works; tweak tuning.
+- [ ] Agent: Scaffold `PigMotor` + `PigController` (offline) and EditMode tests.
+- [ ] You: Validate local pig feel on a flat test track.
 
-## 2) Netcode Foundations
-- Agent: `TickManager` + `TimeSync`; input send via `ServerRpc`; server-authoritative motor; snapshot broadcast (15–20 Hz); client prediction + reconciliation; interpolation buffer for remotes; tests for serialization/interp.
-- You: run Host + Client; test at 80–120 ms RTT using network simulator; note jitter/rubber-banding.
-- Done when: remote pigs are smooth; owned pig is responsive.
+## Phace 2 — NGO Foundations
+- [ ] Agent: Create `Networking/NetworkGameManager : NetworkBehaviour` (lifecycle: Lobby → Countdown → Race → Results).
+- [ ] Agent: Create `Networking/PlayerConnection : NetworkBehaviour` (join/leave, ownership).
+- [ ] Agent: Create `Prefabs/PigPlayer` with `NetworkObject` (+ `NetworkTransform` or custom sync).
+- [ ] Agent: Wire Host/Client buttons in a temporary UI (or keyboard shortcuts) to start/stop `NetworkManager`.
+- [ ] You: Run Host + Client (second build or play-in-editor client) and connect.
 
-## 3) Race Loop
-- Agent: `TrackManager` (ordered checkpoints) + `LapTracker`; grid spawn; `NetworkGameManager` (Lobby → Countdown → Race → Results); HUD counters.
-- You: place checkpoints on a test track; verify laps and results across clients.
-- Done when: a full race works end-to-end for 2+ players.
+## Phace 3 — Networked Movement
+- [ ] Agent: Send input via `ServerRpc` from owner to server (quantized values).
+- [ ] Agent: Simulate pig on server (authoritative); replicate to clients (NetworkVariable/RPC).
+- [ ] Agent: Add basic client-side smoothing/prediction for owned pig.
+- [ ] You: Test at 80–120 ms RTT in Net Simulator; report jitter or rubber‑banding.
 
-## 4) Resilience & Polish
-- Agent: anti-cheat validations, rejoin/spectate flows, parameter tuning under net-sim; more tests.
-- You: test with packet loss/jitter profiles; approve tuning.
-- Done when: stable under common network conditions.
+## Phace 4 — Track & Race Loop
+- [ ] Agent: `TrackManager` with ordered checkpoints and triggers.
+- [ ] Agent: `LapTracker` (laps, sector times) and HUD bindings.
+- [ ] Agent: Spawn grid + `PlayerSpawner`.
+- [ ] Agent: Countdown, race timer, results UI; sync state via `NetworkVariable`s.
+- [ ] You: Build a simple track, place checkpoints, run a 2‑player race end‑to‑end.
 
-## 5) Online Services (Optional)
-- Agent: add Relay + Lobby, minimal join UI.
-- You: configure UGS project IDs/keys; validate cross-network join.
-- Done when: clients can discover/join via Lobby/Relay.
+## Phace 5 — Resilience & Polish
+- [ ] Agent: Anti‑cheat validations (max speed/boost, checkpoint order).
+- [ ] Agent: Rejoin/spectate when a client reconnects mid‑race.
+- [ ] Agent: Tune buffers/rates under latency/jitter/loss; add tests where possible.
+- [ ] You: Validate stability under simulated network conditions.
 
-## Stretch Content
-- Items (pads, oil, bash), ghosts/replays, photo mode.
+## Phace 6 — Online Services (Optional)
+- [ ] Agent: Add Unity Relay + Lobby and simple join UI.
+- [ ] You: Configure UGS IDs/keys; verify cross‑network joining works.
+
+## Phace 7 — Stretch Content
+- [ ] Items (pads, oil, bash); ghosts/replays; photo mode.

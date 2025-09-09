@@ -128,6 +128,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 30520650}
+  - component: {fileID: 30520651}
   m_Layer: 0
   m_Name: Tractor_Pig
   m_TagString: Untagged
@@ -152,6 +153,28 @@ Transform:
   - {fileID: 763883935}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &30520651
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 30520649}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c23e49d6089f4eaf94573401c30454a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PiggyRace.Runtime::PiggyRace.Gameplay.Tractor.TractorMotor
+  UseInput: 1
+  Throttle: 0.444
+  Steer: 0.412
+  Brake: 0.414
+  MaxSpeed: 12
+  ReverseSpeed: 6
+  Accel: 20
+  BrakeDecel: 30
+  LinearDrag: 1
+  TurnRateDeg: 120
 --- !u!1 &212258431
 GameObject:
   m_ObjectHideFlags: 0

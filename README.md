@@ -1,6 +1,6 @@
 # PiggyRace
 
-Arcade online racing where players ride boosty pigs around fun tracks. Built with Unity 6.2 (URP) and Netcode for GameObjects (NGO) 2.5.0 using a server-authoritative model plus client prediction and interpolation.
+Arcade online racing where players ride boosty pigs around fun tracks. This repository is Netcode for GameObjects (NGO)–based: Unity 6.2 (URP) + NGO 2.5.0 with a server‑authoritative model, client prediction, and interpolation.
 
 ---
 
@@ -10,10 +10,12 @@ Arcade online racing where players ride boosty pigs around fun tracks. Built wit
 - Loop per step: propose → patch → you validate in Unity → iterate. The detailed step list lives in TODO.md.
 
 ## Project Structure
-- Code: `Assets/Scripts/` by domain (`Core/`, `Netcode/`, `Gameplay/`, `UI/`).
+- Code: `Assets/Scripts/` by domain (`Core/`, `Gameplay/`, `UI/`).
 - Tests: `Assets/Tests/EditMode` (pure logic) and `Assets/Tests/PlayMode` (runtime/scene).
 - Scenes/Prefabs: `Assets/Scenes`, `Assets/Prefabs`, `Assets/Settings`.
 - Packages: `Packages/manifest.json` (Unity 6.2, NGO 2.5.0, UTP).
+
+Planned networking scripts will live under `Assets/Scripts/Networking/` (e.g., `NetworkGameManager`, `PlayerConnection`, `Spawning`).
 
 ## Architecture Snapshot
 ```mermaid
@@ -47,6 +49,14 @@ flowchart LR
 
 Key principles: server authoritative simulation; client-side prediction for local pig; reconciliation on server snapshots; interpolation for remote pigs; fixed-timestep motor for stability.
 
+## NGO Usage (What we rely on)
+- `NetworkManager` prefab configured with Unity Transport (UTP).
+- `NetworkBehaviour` components for player controllers and the race game manager.
+- RPCs (`ServerRpc`/`ClientRpc`) for input submission and events.
+- `NetworkVariable<T>` for shared race state (phase, countdown, lap totals).
+- `NetworkTransform` or custom transform sync + smoothing for remote players.
+- Optional: Unity Relay + Lobby for discovery and NAT traversal.
+
 ## Development Setup
 - Unity 6.2 with NGO 2.5.0 and Unity Transport. Input System enabled (already present).
 - Editor: Fixed Timestep 0.0167s (60 Hz). Avoid frame-dependent logic in simulation.
@@ -55,7 +65,7 @@ Key principles: server authoritative simulation; client-side prediction for loca
 ## Step-by-Step Milestones
 1) Plumbing: add packages, NetworkManager prefab, scenes (MainMenu, Lobby, Race).
 2) Movement: `PigMotor` + `PigController` + follow camera.
-3) Netcode core: ticks/time sync, input send, server sim, snapshots, prediction/reconciliation.
+3) Netcode core (NGO): ticks/time sync, input via `ServerRpc`, server sim on host, state sync via `NetworkVariable`/RPC, prediction + reconciliation on client, smoothing for remotes.
 4) Race loop: checkpoints, lap tracker, spawns, countdown, HUD, results.
 5) Resilience/polish: anti-cheat checks, rejoin/spectate, net-sim tuning.
 
