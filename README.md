@@ -18,8 +18,8 @@ Arcade-y online racing game where players ride chaotic, boost-happy pigs around 
 - UX: Input System bindings, split HUD (position, lap, delta, minimap), camera follow.
 
 ## Tech Stack
-- Engine: Unity (URP) — repository already configured.
-- Multiplayer: Unity Netcode for GameObjects (NGO) with Unity Transport.
+- Engine: Unity 6.2 (URP) — repository already configured.
+- Multiplayer: Unity Netcode for GameObjects 2.5.0 with Unity Transport.
 - Optional services: Unity Relay + Lobby for NAT traversal and match discovery.
 - Input: Unity Input System (`InputSystem_Actions.inputactions`).
 - Versioning: Git + `.sln`/.csproj managed by Unity.
@@ -178,7 +178,7 @@ flowchart LR
 ---
 
 ## Development Setup
-- Unity: Use an LTS editor version compatible with URP and NGO (e.g., 2022 LTS+).
+- Unity: Use Unity 6.2 editor (URP) compatible with NGO 2.5.0.
 - Packages:
   - Netcode for GameObjects
   - Unity Transport
@@ -228,48 +228,7 @@ flowchart LR
 ---
 
 ## Roadmap / TODO
-
-### Phase 0 — Project Plumbing
-- [ ] Add packages: NGO, Unity Transport, Input System (verify), Cinemachine (optional).
-- [ ] Create scenes: `MainMenu`, `Lobby`, `Race` with minimal UI placeholders.
-- [ ] Add `NetworkManager` prefab with UTP configuration.
-- [ ] Implement `GameBootstrap` and basic scene loading with CLI args for host/client.
-
-### Phase 1 — Core Movement & Camera
-- [ ] Implement `PigMotor` with throttle/steer/drift/boost curves.
-- [ ] Implement `PigController` to translate inputs → motor commands.
-- [ ] Add `ChaseCamera` or Cinemachine follow rig; tune FOV, camera lag.
-- [ ] Create `PigPlayer` prefab (mesh placeholder + `NetworkObject`).
-
-### Phase 2 — Netcode Foundations
-- [ ] `TickManager` + `TimeSync` (client/server RTT, offset smoothing).
-- [ ] `PlayerInputBuffer` (client) and input send path (RPC or custom message).
-- [ ] Authoritative server simulation of `PigMotor`.
-- [ ] `NetPigState` serializer + server snapshot broadcast at 15–20 Hz.
-- [ ] Client prediction + reconciliation for owned pig.
-- [ ] Snapshot interpolation for other players using `SnapshotBuffer`.
-
-### Phase 3 — Race Systems
-- [ ] `TrackManager` with ordered checkpoints, `LapTracker` with sector timing.
-- [ ] Spawn grid, `PlayerSpawner`, and start positions.
-- [ ] `NetworkGameManager` for phases: Lobby → Countdown → Race → Results.
-- [ ] HUD: countdown, lap, position, deltas; basic minimap.
-
-### Phase 4 — Polish & Resilience
-- [ ] Anti-cheat validations (speed, boost economy, checkpoint order).
-- [ ] Spectator mode when eliminated or on join-late.
-- [ ] Pause/Resume handling for host; rejoin with state sync.
-- [ ] NetSim testing: latency/jitter/loss; tune buffers and rates.
-
-### Phase 5 — Online Services (Optional)
-- [ ] Unity Relay integration for NAT traversal.
-- [ ] Unity Lobby for room discovery and ready flow.
-- [ ] Matchmaking queue (stretch goal).
-
-### Content & Nice-to-haves
-- [ ] Items and interactions (speed pads, oil slicks, bash stun).
-- [ ] Ghost racing (best lap or world record).
-- [ ] Photo mode / kill cam replays.
+See TODO.md for the full phased task list.
 
 ---
 

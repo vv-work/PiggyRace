@@ -1,0 +1,11 @@
+{
+  "name": "PiggyRace.Tests.PlayMode",
+  "rootNamespace": "PiggyRace.Tests",
+  "references": [
+    "PiggyRace.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}
+

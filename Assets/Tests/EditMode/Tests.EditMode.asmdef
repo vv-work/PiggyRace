@@ -1,0 +1,14 @@
+{
+  "name": "PiggyRace.Tests.EditMode",
+  "rootNamespace": "PiggyRace.Tests",
+  "references": [
+    "PiggyRace.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}
+
