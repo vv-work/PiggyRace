@@ -19,11 +19,12 @@ Shared checklist for building a Netcode for GameObjects (NGO) game. Each item is
 - [ ] You: Validate local pig feel on a flat test track; adjust Inspector fields (incl. `RotationSpeedDeg`).
 
 ## Phace 2 — NGO Foundations
-- [ ] Agent: Create scripts `Networking/NetworkGameManager : NetworkBehaviour` (Lobby → Countdown → Race → Results) and `Networking/PlayerConnection : NetworkBehaviour` (join/leave/ownership).
-- [x] You: Create `Prefabs/PigPlayer` and add `NetworkObject` (+ `NetworkTransform` if used); assign visuals.
-- [ ] You: Place `NetworkManager` prefab in a bootstrap scene; configure Transport (IP/Relay); set player prefab reference.
-- [ ] You: Add temporary UI (or keyboard shortcuts) to Start Host/Client/Server, wired in Inspector to NetworkManager.
-- [ ] You: Run Host + Client (second build or play-in-editor client) and confirm connection.
+- [x] Agent: Create scripts `Networking/NetworkGameManager : NetworkBehaviour` (Lobby → Countdown → Race → Results) and `Networking/PlayerConnection : NetworkBehaviour` (join/leave/ownership).
+- [x] Agent: Add `Networking/NetworkBootstrap` helper for UI buttons (Start Host/Client/Server, Shutdown).
+ - [ ] You: Create `Prefabs/PigPlayer` and add `NetworkObject` (+ `NetworkTransform` if used); assign visuals.
+ - [ ] You: Place `NetworkManager` prefab in a bootstrap scene; configure Transport (IP/Relay); set player prefab reference.
+ - [ ] You: Add temporary UI (or keyboard shortcuts) to Start Host/Client/Server, wired in Inspector to `NetworkBootstrap` methods.
+ - [ ] You: Run Host + Client (second build or play-in-editor client) and confirm connection.
 
 ## Phace 3 — Networked Movement
 - [ ] Agent: Send input via `ServerRpc` from owner to server (quantized values).

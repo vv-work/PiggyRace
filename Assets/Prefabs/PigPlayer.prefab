@@ -9,9 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3303762641782135448}
-  - component: {fileID: 8179617075325910334}
   - component: {fileID: 1731790022525598735}
   - component: {fileID: 8969344974305068347}
+  - component: {fileID: 817133618219408137}
+  - component: {fileID: 4686611396611502022}
   m_Layer: 0
   m_Name: PigPlayer
   m_TagString: Untagged
@@ -34,30 +35,9 @@ Transform:
   m_Children:
   - {fileID: 289758121694411349}
   - {fileID: 8344950836431301524}
+  - {fileID: 1829463383075909364}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8179617075325910334
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 901847204504983317}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c23e49d6089f4eaf94573401c30454a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PiggyRace.Runtime::PiggyRace.Gameplay.Tractor.TractorMotor
-  UseInput: 1
-  Throttle: 0.444
-  Steer: 0.412
-  Brake: 0.414
-  MaxSpeed: 12
-  ReverseSpeed: 6
-  Accel: 20
-  BrakeDecel: 30
-  LinearDrag: 1
-  TurnRateDeg: 120
 --- !u!114 &1731790022525598735
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -70,14 +50,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2154016737
-  InScenePlacedSourceGlobalObjectIdHash: 0
+  GlobalObjectIdHash: 345028934
+  InScenePlacedSourceGlobalObjectIdHash: 2154016737
   DeferredDespawnTick: 0
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
   ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 1
+  SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
@@ -129,6 +109,115 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!54 &817133618219408137
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 901847204504983317}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &4686611396611502022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 901847204504983317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: def370422b8ec4d488a905bb5e0e8f5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PiggyRace.Runtime::PiggyRace.Gameplay.Pig.PigController
+  UseInput: 1
+  Throttle: 0
+  Steer: 0
+  Brake: 0
+  Drift: 0
+  Boost: 0
+  MaxSpeed: 8
+  ReverseSpeed: 4
+  Accel: 10
+  BrakeDecel: 35
+  LinearDrag: 1.2
+  TurnRateDeg: 140
+  DriftTurnMultiplier: 1.35
+  BoostSpeedAdd: 6
+  BoostDuration: 0.6
+  BoostCooldown: 1.4
+  RotationSpeedDeg: 180
+--- !u!1 &3810879831419704706
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1829463383075909364}
+  - component: {fileID: 2750401525165614623}
+  m_Layer: 0
+  m_Name: Collider
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1829463383075909364
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3810879831419704706}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0.74, z: -0.67}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3303762641782135448}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!65 &2750401525165614623
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3810879831419704706}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.5972316, y: 3.1113408, z: 1.5551733}
+  m_Center: {x: 0.012617707, y: 0.49208546, z: -0.2775867}
 --- !u!1001 &256656819657399742
 PrefabInstance:
   m_ObjectHideFlags: 0

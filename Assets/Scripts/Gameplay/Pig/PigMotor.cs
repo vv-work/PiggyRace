@@ -60,23 +60,25 @@ namespace PiggyRace.Gameplay.Pig
 
             // Speed control (scalar along forward)
             float speed = VelocityXZ.magnitude;
+            // Determine current cap (target) including boost allowance
+            float baseCap = (throttle >= 0f) ? MaxSpeed : ReverseSpeed;
+            float cap = baseCap;
+            if (_boostTimer > 0f && throttle >= 0f)
+                cap = baseCap + BoostSpeedAdd;
+
             if (brake)
             {
                 speed = Mathf.Max(0f, speed - BrakeDecel * dt);
             }
             else
             {
-                float maxForward = MaxSpeed * Mathf.Max(0f, throttle);
-                float maxReverse = ReverseSpeed * Mathf.Max(0f, -throttle);
-                float target = (throttle >= 0f) ? maxForward : -maxReverse;
+                float target = (throttle >= 0f) ? cap * Mathf.Max(0f, throttle) : -cap * Mathf.Max(0f, -throttle);
                 float signed = speed * Mathf.Sign(target);
                 signed = Mathf.MoveTowards(signed, target, Accel * dt);
+                // Clamp to cap to avoid runaway accumulation when boost is active
+                signed = Mathf.Clamp(signed, -cap, cap);
                 speed = Mathf.Abs(signed);
             }
-
-            // Boost if active
-            if (_boostTimer > 0f)
-                speed += BoostSpeedAdd;
 
             // Drag
             speed = Mathf.Max(0f, speed - speed * LinearDrag * dt);
@@ -90,4 +92,3 @@ namespace PiggyRace.Gameplay.Pig
         }
     }
 }
-
