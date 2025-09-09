@@ -28,6 +28,7 @@ namespace PiggyRace.Networking
         public float RemoteLerpRate = 12f; // higher = faster catch-up
         public float OwnerReconcileThreshold = 1.0f; // meters
         public float OwnerReconcileRate = 10f;
+        public float OwnerLerpRate = 8f; // always blend owner to server state (client-only)
 
         private PigMotor _motor;
         private Rigidbody _rb;
@@ -88,6 +89,37 @@ namespace PiggyRace.Networking
                     Debug.Log($"[NetworkPig] OnSpawn. Owner={OwnerClientId} Local={NetworkManager.LocalClientId} IsServer={IsServer} IsOwner={IsOwner}");
                 }
             }
+
+            if (IsClient)
+            {
+                NetPos.OnValueChanged += OnNetPosChanged;
+                NetYaw.OnValueChanged += OnNetYawChanged;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (IsClient)
+            {
+                NetPos.OnValueChanged -= OnNetPosChanged;
+                NetYaw.OnValueChanged -= OnNetYawChanged;
+            }
+        }
+
+        private void OnNetPosChanged(Vector3 oldValue, Vector3 newValue)
+        {
+            if (VerboseLogs)
+            {
+                Debug.Log($"[NetworkPig][Client {NetworkManager.LocalClientId}] NetPos changed {oldValue} -> {newValue} (owner={OwnerClientId})");
+            }
+        }
+
+        private void OnNetYawChanged(float oldValue, float newValue)
+        {
+            if (VerboseLogs)
+            {
+                Debug.Log($"[NetworkPig][Client {NetworkManager.LocalClientId}] NetYaw changed {oldValue:F1} -> {newValue:F1} (owner={OwnerClientId})");
+            }
         }
 
         private void Update()
@@ -104,14 +136,7 @@ namespace PiggyRace.Networking
                 }
             }
 
-            if (IsServer)
-            {
-                // Authoritative step on server using last inputs received
-                var (delta, targetYaw) = _motor.Step(dt, _inThrottle, _inSteer, _inBrake, _inDrift, _inBoost);
-                ApplyTransform(delta, targetYaw, RotationSpeedDeg);
-                NetPos.Value = transform.position;
-                NetYaw.Value = transform.eulerAngles.y;
-            }
+            // server sim moved to FixedUpdate for consistency
 
             if (IsClient && !IsOwner)
             {
@@ -126,14 +151,14 @@ namespace PiggyRace.Networking
 
             if (IsClient && IsOwner && !IsServer)
             {
-                // Light reconciliation: if drifted far from server state, blend back
-                float dist = Vector3.Distance(transform.position, NetPos.Value);
-                if (dist > OwnerReconcileThreshold)
+                // Always blend owner towards server state to ensure visible movement even if prediction fails
+                float t = Mathf.Clamp01(OwnerLerpRate * dt);
+                Vector3 newPos = Vector3.Lerp(transform.position, NetPos.Value, t);
+                float newYaw = Mathf.MoveTowardsAngle(transform.eulerAngles.y, NetYaw.Value, RotationSpeedDeg * dt);
+                SetTransform(newPos, newYaw);
+                if (VerboseLogs && Time.time - _lastInputLogTime > 0.5f)
                 {
-                    float t = Mathf.Clamp01(OwnerReconcileRate * dt);
-                    Vector3 newPos = Vector3.Lerp(transform.position, NetPos.Value, t);
-                    float newYaw = Mathf.MoveTowardsAngle(transform.eulerAngles.y, NetYaw.Value, RotationSpeedDeg * dt);
-                    SetTransform(newPos, newYaw);
+                    Debug.Log($"[NetworkPig][Client {NetworkManager.LocalClientId}] blend to net pos={NetPos.Value} local={transform.position} d={(NetPos.Value-transform.position).magnitude:F2}");
                 }
             }
         }
@@ -150,6 +175,19 @@ namespace PiggyRace.Networking
                 }
                 // Send input to server each fixed step
                 SubmitInputServerRpc(_locThrottle, _locSteer, _locBrake, _locDrift, _locBoost);
+            }
+
+            if (IsServer)
+            {
+                var (delta, targetYaw) = _motor.Step(dt, _inThrottle, _inSteer, _inBrake, _inDrift, _inBoost);
+                ApplyTransform(delta, targetYaw, RotationSpeedDeg);
+                NetPos.Value = transform.position;
+                NetYaw.Value = transform.eulerAngles.y;
+                if (VerboseLogs && Time.time - _lastInputLogTime > 0.5f)
+                {
+                    _lastInputLogTime = Time.time;
+                    Debug.Log($"[NetworkPig][Server] step owner={OwnerClientId} pos={transform.position}");
+                }
             }
         }
 
