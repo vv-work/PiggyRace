@@ -66,3 +66,20 @@ See TODO.md for an actionable, checkpointed plan with “Agent does / You do” 
 - Describe behavioral changes; attach screenshots/gifs for gameplay/HUD changes.
 
 License: TBD
+
+---
+
+## Tractor Prototype (offline, no Netcode)
+- Components: `TractorMotor` (MonoBehaviour) + `TractorModel` (pure logic).
+- Purpose: quick local driving to test feel before wiring NGO.
+
+How to use in a scene
+- Create an empty GameObject named `Tractor` and add `TractorMotor`.
+- Optional: add a `Rigidbody` (no gravity needed for flat test) to use physics transforms.
+- Set `UseInput = true` for WASD/Space control (Input System keyboard supported); or set `UseInput = false` and drive `Throttle/Steer/Brake` via another script/Timeline.
+- Tune fields: `MaxSpeed`, `Accel`, `BrakeDecel`, `TurnRateDeg` on the component.
+- Press Play and drive around a flat plane. Add a simple camera to follow, or assign your existing follow rig.
+
+Tests
+- EditMode: `TractorModelTests` validate acceleration, turning, and drag.
+- PlayMode: `TractorMotorPlayModeTest` sanity-checks forward motion and turning.
