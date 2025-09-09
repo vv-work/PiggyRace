@@ -12,11 +12,11 @@ Shared checklist for building a Netcode for GameObjects (NGO) game. Each item is
 - [x] Agent: Maintain `PiggyRace.Runtime.asmdef` references (Unity.InputSystem; add NGO refs when code requires it).
 
 ## Phace 1 — Local Movement (Offline)
-- [ ] Agent: Implement `TractorModel` (done) and `TractorMotor` (done) with tests.
-- [ ] You: Drop `TractorMotor` in a test scene; verify WASD + Space works; tweak tuning in Inspector.
-- [ ] You: Add Cinemachine Brain (Main Camera) and a Virtual Camera; set Follow/LookAt to tractor.
-- [ ] Agent: Scaffold `PigMotor` + `PigController` (offline) and EditMode tests.
-- [ ] You: Validate local pig feel on a flat test track; adjust Inspector fields.
+- [x] Agent: Implement `TractorModel` (done) and `TractorMotor` (done) with tests.
+- [x] You: Drop `TractorMotor` in a test scene; verify WASD + Space works; tweak tuning in Inspector.
+- [x] You: Add Cinemachine Brain (Main Camera) and a Virtual Camera; set Follow/LookAt to tractor.
+- [x] Agent: Scaffold `PigMotor` + `PigController` (offline) and EditMode tests.
+- [x] You: Validate local pig feel on a flat test track; adjust Inspector fields.
 
 ## Phace 2 — NGO Foundations
 - [ ] Agent: Create scripts `Networking/NetworkGameManager : NetworkBehaviour` (Lobby → Countdown → Race → Results) and `Networking/PlayerConnection : NetworkBehaviour` (join/leave/ownership).
