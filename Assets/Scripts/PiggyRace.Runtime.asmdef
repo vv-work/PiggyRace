@@ -5,7 +5,8 @@
     "Unity.InputSystem",
     "Unity.Netcode.Runtime",
     "Unity.Collections",
-    "Unity.TextMeshPro"
+    "Unity.TextMeshPro",
+    "Unity.Cinemachine"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
