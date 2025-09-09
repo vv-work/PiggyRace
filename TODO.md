@@ -3,13 +3,13 @@
 Shared checklist for building a Netcode for GameObjects (NGO) game. Each item is small, actionable, and marked for Agent or You.
 
 ## Phace 0 — Preflight & Packages
-- [ ] You: Install via Package Manager: Netcode for GameObjects 2.5.0, Unity Transport (compatible), Input System, Cinemachine.
-- [ ] You: Project Settings → Player → Active Input Handling = Input System Package.
-- [ ] You: Project Settings → Time → Fixed Timestep = 0.0167.
-- [ ] You: Create scenes `MainMenu`, `Lobby`, `Race` (placeholders) in `Assets/Scenes`.
-- [ ] You: Create `Assets/Prefabs/Systems/NetworkManager` prefab and configure Unity Transport (address/port).
-- [ ] Agent: Create folders `Assets/Scripts/{Core,Gameplay,UI,Networking}`.
-- [ ] Agent: Maintain `PiggyRace.Runtime.asmdef` references (Unity.InputSystem; add NGO refs when code requires it).
+- [x] You: Install via Package Manager: Netcode for GameObjects 2.5.0, Unity Transport (compatible), Input System, Cinemachine.
+- [x] You: Project Settings → Player → Active Input Handling = Input System Package.
+- [x] You: Project Settings → Time → Fixed Timestep = 0.0167.
+- [x] You: Create scenes `MainMenu`, `Lobby`, `Race` (placeholders) in `Assets/Scenes`.
+- [x] You: Create `Assets/Prefabs/Systems/NetworkManager` prefab and configure Unity Transport (address/port).
+- [x] Agent: Create folders `Assets/Scripts/{Core,Gameplay,UI,Networking}`.
+- [x] Agent: Maintain `PiggyRace.Runtime.asmdef` references (Unity.InputSystem; add NGO refs when code requires it).
 
 ## Phace 1 — Local Movement (Offline)
 - [ ] Agent: Implement `TractorModel` (done) and `TractorMotor` (done) with tests.
