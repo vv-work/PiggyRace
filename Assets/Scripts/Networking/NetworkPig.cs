@@ -54,8 +54,8 @@ namespace PiggyRace.Networking
             _rb = GetComponent<Rigidbody>();
             if (_rb != null)
             {
-                // We drive motion explicitly; keep RB kinematic and interpolated for visuals.
-                _rb.isKinematic = true;
+                // Server simulates physics with a dynamic body; clients use kinematic for visual smoothing/prediction.
+                _rb.isKinematic = !IsServer;
                 _rb.interpolation = RigidbodyInterpolation.Interpolate;
             }
 
@@ -179,6 +179,7 @@ namespace PiggyRace.Networking
 
             if (IsServer)
             {
+                // Authoritative physics on server: drive Rigidbody velocity and rotation
                 var (delta, targetYaw) = _motor.Step(dt, _inThrottle, _inSteer, _inBrake, _inDrift, _inBoost);
                 ApplyTransform(delta, targetYaw, RotationSpeedDeg);
                 NetPos.Value = transform.position;
@@ -271,8 +272,20 @@ namespace PiggyRace.Networking
             float newYaw = absoluteYaw ? targetYaw : Mathf.MoveTowardsAngle(transform.eulerAngles.y, targetYaw, rotSpeed * Time.deltaTime);
             if (_rb != null)
             {
-                _rb.MovePosition(_rb.position + new Vector3(delta.x, 0f, delta.y));
-                _rb.MoveRotation(Quaternion.Euler(0f, newYaw, 0f));
+                if (_rb.isKinematic)
+                {
+                    // Clients: visual smoothing/prediction via kinematic moves
+                    _rb.MovePosition(_rb.position + new Vector3(delta.x, 0f, delta.y));
+                    _rb.MoveRotation(Quaternion.Euler(0f, newYaw, 0f));
+                }
+                else
+                {
+                    // Server: dynamic rigidbody — convert delta to velocity this fixed step
+                    float invDt = (Time.fixedDeltaTime > 0f) ? 1f / Time.fixedDeltaTime : 0f;
+                    Vector3 velXZ = new Vector3(delta.x, 0f, delta.y) * invDt;
+                    _rb.linearVelocity = new Vector3(velXZ.x, _rb.linearVelocity.y, velXZ.z); // keep Y (gravity)
+                    _rb.MoveRotation(Quaternion.Euler(0f, newYaw, 0f));
+                }
             }
             else
             {
@@ -285,8 +298,17 @@ namespace PiggyRace.Networking
         {
             if (_rb != null)
             {
-                _rb.MovePosition(pos);
-                _rb.MoveRotation(Quaternion.Euler(0f, yaw, 0f));
+                if (_rb.isKinematic)
+                {
+                    _rb.MovePosition(pos);
+                    _rb.MoveRotation(Quaternion.Euler(0f, yaw, 0f));
+                }
+                else
+                {
+                    // Only expected on server during hard snaps (rare); set directly to avoid fights with velocity
+                    _rb.position = pos;
+                    _rb.rotation = Quaternion.Euler(0f, yaw, 0f);
+                }
             }
             else
             {
