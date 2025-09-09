@@ -3,8 +3,8 @@
 This file tracks the implementation phases and tasks. See README for architecture and design.
 
 ## Phase 0 — Project Plumbing
-- [ ] Add packages: NGO, Unity Transport, Input System (verify), Cinemachine (optional).
-- [ ] Create scenes: `MainMenu`, `Lobby`, `Race` with minimal UI placeholders.
+- [x] Add packages: NGO, Unity Transport, Input System (verify), Cinemachine (optional).
+- [x] Create scenes: `MainMenu`, `Lobby`, `Race` with minimal UI placeholders.
 - [ ] Add `NetworkManager` prefab with UTP configuration.
 - [ ] Implement `GameBootstrap` and basic scene loading with CLI args for host/client.
 
