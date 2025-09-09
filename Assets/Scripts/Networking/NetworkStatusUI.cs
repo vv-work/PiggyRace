@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 using Unity.Netcode;
 
 namespace PiggyRace.Networking
@@ -7,7 +7,7 @@ namespace PiggyRace.Networking
     // Bind a Text field to show basic NGO status and connected clients count.
     public class NetworkStatusUI : MonoBehaviour
     {
-        [SerializeField] private Text statusText;
+        [SerializeField] private TMP_Text statusText;
 
         void Update()
         {
@@ -25,4 +25,3 @@ namespace PiggyRace.Networking
         }
     }
 }
-

@@ -1,6 +1,6 @@
 # PiggyRace
 
-Arcade online racing where players ride boosty pigs around fun tracks. This repository is Netcode for GameObjects (NGO)–based: Unity 6.2 (URP) + NGO 2.5.0 with a server‑authoritative model, client prediction, and interpolation.
+Arcade online racing where players ride boosty pigs around fun tracks. This repository is Netcode for GameObjects (NGO)–based: Unity 6.2 (URP) + NGO 2.5.0 with a server‑authoritative model, client prediction, and interpolation. UI uses TextMeshPro (TMP).
 
 ---
 
@@ -58,7 +58,7 @@ Key principles: server authoritative simulation; client-side prediction for loca
 - Optional: Unity Relay + Lobby for discovery and NAT traversal.
 
 ## Development Setup
-- Unity 6.2 with NGO 2.5.0 and Unity Transport. Input System enabled (already present).
+- Unity 6.2 with NGO 2.5.0 and Unity Transport. Input System enabled (already present). UI uses TextMeshPro (TMP).
 - Editor: Fixed Timestep 0.0167s (60 Hz). Avoid frame-dependent logic in simulation.
 - Tests: Window → General → Test Runner → Run All (or CLI flags in AGENTS.md).
 
@@ -76,6 +76,11 @@ See TODO.md for an actionable, checkpointed plan with “Agent does / You do” 
 - Describe behavioral changes; attach screenshots/gifs for gameplay/HUD changes.
 
 License: TBD
+
+## Tools
+- Input: Unity Input System
+- UI: TextMeshPro (TMP)
+- Camera: Cinemachine (optional)
 
 ---
 
