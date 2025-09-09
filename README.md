@@ -79,17 +79,15 @@ License: TBD
 
 ---
 
-## Tractor Prototype (offline, no Netcode)
-- Components: `TractorMotor` (MonoBehaviour) + `TractorModel` (pure logic).
+## Local Pig Prototype (offline)
+- Components: `PigController` (MonoBehaviour) + `PigMotor` (pure logic).
 - Purpose: quick local driving to test feel before wiring NGO.
 
 How to use in a scene
-- Create an empty GameObject named `Tractor` and add `TractorMotor`.
-- Optional: add a `Rigidbody` (no gravity needed for flat test) to use physics transforms.
-- Set `UseInput = true` for WASD/Space control (Input System keyboard supported); or set `UseInput = false` and drive `Throttle/Steer/Brake` via another script/Timeline.
-- Tune fields: `MaxSpeed`, `Accel`, `BrakeDecel`, `TurnRateDeg` on the component.
-- Press Play and drive around a flat plane. Add a simple camera to follow, or assign your existing follow rig.
+- Create an empty GameObject named `Pig` and add `PigController`.
+- Optional: add a kinematic `Rigidbody` to use physics transforms.
+- Controls: W/S (throttle), A/D (steer), Space (brake), Shift (drift), Ctrl (boost).
+- Tune fields in Inspector: speed/accel/drag, turn/ drift multipliers, boost, and `RotationSpeedDeg` for visual turn smoothing.
 
 Tests
-- EditMode: `TractorModelTests` validate acceleration, turning, and drag.
-- PlayMode: `TractorMotorPlayModeTest` sanity-checks forward motion and turning.
+- EditMode: `PigMotorTests` validate acceleration/turning, drift turn rate, boost effect.

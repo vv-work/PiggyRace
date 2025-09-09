@@ -156,6 +156,35 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &30520655
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 30520649}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: def370422b8ec4d488a905bb5e0e8f5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PiggyRace.Runtime::PiggyRace.Gameplay.Pig.PigController
+  UseInput: 1
+  Throttle: 0
+  Steer: 0
+  Brake: 0
+  Drift: 0
+  Boost: 0
+  MaxSpeed: 16
+  ReverseSpeed: 8
+  Accel: 24
+  BrakeDecel: 35
+  LinearDrag: 1.2
+  TurnRateDeg: 140
+  DriftTurnMultiplier: 1.35
+  BoostSpeedAdd: 6
+  BoostDuration: 0.6
+  BoostCooldown: 1.4
+  RotationSpeedDeg: 720
 --- !u!1 &212258431
 GameObject:
   m_ObjectHideFlags: 0
@@ -381,8 +410,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.06797002, y: -0.000000056742593, z: 0.000000003865735, w: 0.9976874}
-  m_LocalPosition: {x: -3.699999, y: 6.8843193, z: -16.294388}
+  m_LocalRotation: {x: 0.30532634, y: -1.981166e-16, z: 1.9998776e-16, w: 0.9522478}
+  m_LocalPosition: {x: -3.7, y: 10.193744, z: -11.302617}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -698,7 +727,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 10, y: 10, z: 10}
+  m_LocalScale: {x: 1000, y: 1000, z: 1000}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1089,7 +1118,7 @@ GameObject:
   - component: {fileID: 1688231606}
   - component: {fileID: 1688231605}
   - component: {fileID: 1688231610}
-  - component: {fileID: 1688231609}
+  - component: {fileID: 1688231611}
   m_Layer: 0
   m_Name: CinemachineCamera
   m_TagString: Untagged
@@ -1148,42 +1177,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1688231604}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.06787654, y: -0.000000026006406, z: 0.0000000017693057, w: 0.9976938}
-  m_LocalPosition: {x: -3.699999, y: 6.8843193, z: -16.294388}
+  m_LocalRotation: {x: 0.30532634, y: -1.981166e-16, z: 1.9998776e-16, w: 0.9522478}
+  m_LocalPosition: {x: -3.7, y: 10.193744, z: -11.302617}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1688231609
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1688231604}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f38bda98361e1de48a4ca2bd86ea3c17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineRotationComposer
-  Composition:
-    ScreenPosition: {x: 0, y: 0.33}
-    DeadZone:
-      Enabled: 0
-      Size: {x: 0.2, y: 0.2}
-    HardLimits:
-      Enabled: 0
-      Size: {x: 0.8, y: 0.8}
-      Offset: {x: 0, y: 0.24}
-  CenterOnActivate: 0
-  TargetOffset: {x: 0, y: 0, z: 0}
-  Damping: {x: 0.5, y: 0.5}
-  Lookahead:
-    Enabled: 1
-    Time: 0.338
-    Smoothing: 10.1
-    IgnoreY: 0
+  m_LocalEulerAnglesHint: {x: 30, y: 0, z: 0}
 --- !u!114 &1688231610
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1201,19 +1201,48 @@ MonoBehaviour:
   Composition:
     ScreenPosition: {x: 0, y: 0.2}
     DeadZone:
+      Enabled: 1
+      Size: {x: 0.1, y: 0.2}
+    HardLimits:
       Enabled: 0
-      Size: {x: 0.2, y: 0.2}
+      Size: {x: 0.6, y: 0.6}
+      Offset: {x: 0, y: 0}
+  CenterOnActivate: 1
+  TargetOffset: {x: 0, y: 2.5, z: -0.81}
+  Damping: {x: 1, y: 1, z: 1}
+  Lookahead:
+    Enabled: 0
+    Time: 0.451
+    Smoothing: 11.4
+    IgnoreY: 0
+--- !u!114 &1688231611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1688231604}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f38bda98361e1de48a4ca2bd86ea3c17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineRotationComposer
+  Composition:
+    ScreenPosition: {x: 0, y: 0.15}
+    DeadZone:
+      Enabled: 1
+      Size: {x: 0.1, y: 0.1}
     HardLimits:
       Enabled: 0
       Size: {x: 0.8, y: 0.8}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
-  TargetOffset: {x: 0, y: 3.24, z: -3}
-  Damping: {x: 1, y: 1, z: 1}
+  TargetOffset: {x: 0, y: 2.5, z: 0}
+  Damping: {x: 0.5, y: 0.5}
   Lookahead:
-    Enabled: 1
-    Time: 0.451
-    Smoothing: 11.8
+    Enabled: 0
+    Time: 0
+    Smoothing: 0
     IgnoreY: 0
 --- !u!1 &1689559788
 GameObject:
@@ -1341,6 +1370,14 @@ PrefabInstance:
       propertyPath: GlobalObjectIdHash
       value: 345028934
       objectReference: {fileID: 0}
+    - target: {fileID: 1731790022525598735, guid: 62327103c800b47099e6a7377439a4b3, type: 3}
+      propertyPath: SceneMigrationSynchronization
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1731790022525598735, guid: 62327103c800b47099e6a7377439a4b3, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 2154016737
+      objectReference: {fileID: 0}
     - target: {fileID: 3303762641782135448, guid: 62327103c800b47099e6a7377439a4b3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -3.7
@@ -1381,7 +1418,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8179617075325910334, guid: 62327103c800b47099e6a7377439a4b3, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 3303762641782135448, guid: 62327103c800b47099e6a7377439a4b3, type: 3}
@@ -1391,6 +1429,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 901847204504983317, guid: 62327103c800b47099e6a7377439a4b3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 30520654}
+    - targetCorrespondingSourceObject: {fileID: 901847204504983317, guid: 62327103c800b47099e6a7377439a4b3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 30520655}
   m_SourcePrefab: {fileID: 100100000, guid: 62327103c800b47099e6a7377439a4b3, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

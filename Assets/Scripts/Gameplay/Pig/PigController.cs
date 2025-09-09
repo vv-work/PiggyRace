@@ -26,6 +26,8 @@ namespace PiggyRace.Gameplay.Pig
         public float BoostSpeedAdd = 6f;
         public float BoostDuration = 0.6f;
         public float BoostCooldown = 1.4f;
+        [Header("Presentation")]
+        public float RotationSpeedDeg = 720f; // how fast we turn the avatar toward motor yaw
 
         private PigMotor _motor;
         private Rigidbody _rb;
@@ -51,16 +53,19 @@ namespace PiggyRace.Gameplay.Pig
         private void Update()
         {
             float dt = Time.deltaTime;
-            var (delta, yaw) = _motor.Step(dt, GetThrottle(), GetSteer(), GetBrake(), GetDrift(), GetBoost());
+            var (delta, targetYaw) = _motor.Step(dt, GetThrottle(), GetSteer(), GetBrake(), GetDrift(), GetBoost());
+            // Smoothly rotate the visible object to targetYaw using RotationSpeedDeg
+            float currentYaw = transform.eulerAngles.y;
+            float newYaw = Mathf.MoveTowardsAngle(currentYaw, targetYaw, RotationSpeedDeg * dt);
             if (_rb != null)
             {
                 _rb.MovePosition(_rb.position + new Vector3(delta.x, 0f, delta.y));
-                _rb.MoveRotation(Quaternion.Euler(0f, yaw, 0f));
+                _rb.MoveRotation(Quaternion.Euler(0f, newYaw, 0f));
             }
             else
             {
                 transform.position += new Vector3(delta.x, 0f, delta.y);
-                transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+                transform.rotation = Quaternion.Euler(0f, newYaw, 0f);
             }
         }
 
@@ -100,4 +105,3 @@ namespace PiggyRace.Gameplay.Pig
         }
     }
 }
-
