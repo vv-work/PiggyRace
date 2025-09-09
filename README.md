@@ -86,30 +86,30 @@ Assets/
 ```mermaid
 flowchart LR
   subgraph Clients
-    C1[Client A]\nInput + Prediction
-    C2[Client B]\nInput + Prediction
-    Cn[Client N]\nInput + Prediction
+    C1[Client A<br/>Input + Prediction]
+    C2[Client B<br/>Input + Prediction]
+    Cn[Client N<br/>Input + Prediction]
   end
 
   subgraph Server[Host/Server]
     NM[NetworkManager]
-    GSM[NetworkGameManager]\nMatch State
-    SIM[Authoritative Simulation]\nPig Physics
-    VAL[Validation]\nAnti-Cheat Checks
+    GSM[NetworkGameManager<br/>Match State]
+    SIM[Authoritative Simulation<br/>Pig Physics]
+    VAL[Validation<br/>Anti-Cheat Checks]
     SS[Snapshot Builder]
   end
 
-  C1 -- Inputs (ticks) --> Server
-  C2 -- Inputs (ticks) --> Server
-  Cn -- Inputs (ticks) --> Server
+  C1 -- Inputs (ticks) --> NM
+  C2 -- Inputs (ticks) --> NM
+  Cn -- Inputs (ticks) --> NM
 
-  Server -- Snapshots (20 Hz) --> C1
-  Server -- Snapshots (20 Hz) --> C2
-  Server -- Snapshots (20 Hz) --> Cn
+  NM -- Snapshots (20 Hz) --> C1
+  NM -- Snapshots (20 Hz) --> C2
+  NM -- Snapshots (20 Hz) --> Cn
 
-  C1 <-- Time Sync --> Server
-  C2 <-- Time Sync --> Server
-  Cn <-- Time Sync --> Server
+  C1 <-- Time Sync --> NM
+  C2 <-- Time Sync --> NM
+  Cn <-- Time Sync --> NM
 ```
 
 ### Key Principles
@@ -295,4 +295,3 @@ TBD.
 ---
 
 Happy racing and oink oink!
-
