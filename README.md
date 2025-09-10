@@ -28,8 +28,9 @@ Current status (snapshot)
 Key scripts (implemented)
 - Networking: `Assets/Scripts/Networking/NetworkPig.cs`, `PlayerSpawner.cs`, `MovementValidator.cs`.
 - Race: `Assets/Scripts/Gameplay/Race/{TrackManager.cs,Checkpoint.cs,LapTracker.cs,LapTrackerLogic.cs}`.
-- UI: `Assets/Scripts/UI/RaceStatusUI.cs`.
+- UI: `Assets/Scripts/UI/RaceStatusUI.cs`, `Assets/Scripts/UI/NetworkStatusUI.cs`, `Assets/Scripts/UI/NetworkHubUI.cs`.
 - UGS glue: `Assets/Scripts/Networking/UGS/{RelayLobbyService.cs,RelayLobbyUI.cs,MultiplayerServicesConnector.cs}`.
+ - Visuals: `Assets/Scripts/Gameplay/Pig/PigVisualController.cs` (anim + particles by speed).
 
 ## Architecture Snapshot
 ```mermaid
@@ -130,6 +131,14 @@ License: TBD
   - Add `RaceStatusUI` to the TMP object and assign its `TMP_Text` field (or let it auto-grab).
   - Ensure your player prefab has `LapTracker` and the scene has `NetworkGameManager`.
 
+## Network Status UI
+- Component: `PiggyRace.UI.NetworkStatusUI`
+- Shows: whether you’re using UGS (Relay) or direct IP with emoji badge and details
+  - UGS: `UGS: ✅ Internet (Relay) | Code: ABC123 | Role: Host/Client`
+  - Direct: `UGS: ❌ Local (Direct) | 127.0.0.1:7777 | Role: Host/Client`
+- How to use:
+  - Add a TMP_Text to your Canvas and add `NetworkStatusUI` to it. It auto-detects the active path.
+
 
 ---
 
@@ -148,7 +157,7 @@ Tests
 
 
 ## Online Services (Multiplayer + Relay)
-This project includes a unified join‑code flow for online play. It prefers the new Multiplayer Services package and cleanly falls back to Relay when Multiplayer is not installed.
+This project includes a join‑code flow for online play over UGS Relay. The wiring configures `UnityTransport` with Relay endpoints and explicitly starts Host/Client.
 
 Packages
 - Preferred (unified): `com.unity.services.multiplayer`
@@ -157,16 +166,19 @@ Packages
 Compilation guards
 - Code paths for Multiplayer/Relay are wrapped in defines (e.g., `UGS_MULTIPLAYER`, `UGS_RELAY`). When the packages are absent, the scripts compile but UI will show an info message.
 
-Scene wiring
+Scene wiring (UGS UI)
 - Add `RelayLobbyService` (any GameObject).
 - Add `RelayLobbyUI` to your existing network UI and wire fields:
   - `Join Code Input` (TMP_InputField), `Status Text` (TMP_Text), and optional `Max Connections`.
   - Buttons: bind to `InitializeUGS`, `HostWithRelay`, and `JoinWithRelay`.
 
+Classic buttons (smart)
+- `NetworkBootstrap.StartHost/StartClient/StartServer` now prefer UGS Relay when available (allocates/joins + starts NGO). Falls back to direct IP when UGS is unavailable.
+
 Usage
 1) Click Initialize UGS (once per run). It initializes Services and anonymous auth.
-2) Host: with Multiplayer installed, clicking Host creates a session, outputs a join code, and automatically starts Host via NGO. Without Multiplayer, Relay allocation is used and Host starts as before.
-3) Join: paste the join code and Start Client.
+2) Host: allocates Relay, prints a join code, configures UnityTransport, and starts Host.
+3) Join: paste the join code, configures UnityTransport, and starts Client.
 
 Security
 - Client-authoritative mode is for prototypes. Use server-authoritative with prediction + reconciliation for shipping.
@@ -182,7 +194,30 @@ Inspector tuning (quick reference)
 - `NetworkPig`: `Authority` (ServerAuthoritative | ClientAuthoritative), `SnapshotRateHz`, `RemoteLerpRate`, `OwnerReconcileThreshold`.
 - `MovementValidator`: tune max speed/yaw limits in `NetworkPig` fields that call it.
 - `LapTracker`: assign `TrackManager`, laps, and optional arrow transform for next‑checkpoint indicator.
+ - `PigVisualController`: assign Animator and two particle systems; thresholds for low/high tiers.
 
 Scene bootstrap (ensuring players spawn and race scene loads)
 - Add `AutoPlayerSpawner` to any persistent object in your starting scene. It ensures a player object is spawned for each client if NGO doesn’t auto‑spawn.
 - Add `NetworkSceneBootstrap` to your starting scene and set `Scene Name` to `Race`. When the server/host starts, it loads the Race scene via NGO SceneManager so that `NetworkGameManager`, `TrackManager`, and checkpoints exist for all peers.
+
+## Visuals (Animator + Particles)
+- Component: `PiggyRace.Gameplay.Pig.PigVisualController`
+- Call: `SpeedUpdate(float normalizedSpeed)` updates Animator `Speed` and toggles two particle tiers
+  - 0.00–0.33: none; 0.33–0.66: low; 0.66–1.00: high.
+- `NetworkPig` auto-computes normalized speed and calls the visual controller.
+
+## Input System
+- The project uses the new Input System. Third‑party Polyperfect scripts were updated to compile with or without the package:
+  - Added `Assets/Assets/polyperfect/polyperfect.asmdef` referencing `Unity.InputSystem` and define `HAVE_INPUTSYSTEM`.
+  - `Polyperfect_CameraController` and `Common_KillSwitch` read inputs via Input System when available; fallback to legacy Input if not.
+
+## Transport / Protocol
+- Always use `UnityTransport`.
+  - Internet: UGS Relay (DTLS) — configured automatically by the UGS flows.
+  - LAN/Direct: IP:port (requires reachable host and open firewall).
+  - WebGL: use WebSockets (WSS) with Relay.
+
+## Troubleshooting
+- Join code not found: ensure same UGS project + environment (Production/Sandbox), host is still running, use a fresh code, and paste without whitespace (codes are uppercased + trimmed on join).
+- Client “doesn’t move”: ensure `NetworkTransform` on the Pig prefab is disabled (handled at runtime by `NetworkPig`), and you are not marked spectator during Countdown. Late joiners during Race are active immediately.
+- Start buttons do nothing: use UGS `Initialize → Host/Join` or the smart `NetworkBootstrap` buttons which now allocate/join Relay and explicitly start Host/Client.

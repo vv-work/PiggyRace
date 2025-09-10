@@ -93,7 +93,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 112000001, guid: 3919b8758e82a8a489bcf448ff705580, type: 2}
+  m_LightingDataAsset: {fileID: 112000000, guid: 222e5f7ae24de4f7584b7eb8f912bb77, type: 2}
   m_LightingSettings: {fileID: 4890085278179872738, guid: be9dd77d15223437eaed6000bdb7e28c, type: 2}
 --- !u!196 &4
 NavMeshSettings:
@@ -385,6 +385,7 @@ GameObject:
   m_Component:
   - component: {fileID: 59291351}
   - component: {fileID: 59291350}
+  - component: {fileID: 59291352}
   m_Layer: 8
   m_Name: Directional Light
   m_TagString: Untagged
@@ -472,6 +473,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 60.142002, y: -400.577, z: 66.04401}
+--- !u!114 &59291352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 59291349}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!4 &99373489 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 1af303be9916c4f7e855c441e1cc8648, type: 3}

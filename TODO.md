@@ -52,6 +52,9 @@ Shared checklist for building a Netcode for GameObjects (NGO) game. Each item is
 - [x] Agent: Tune buffers/rates — throttle owner snapshots (configurable `SnapshotRateHz`).
 - [x] Agent: Add unit tests for movement validation (`MovementValidatorTests`).
 - [x] You: Validate stability under simulated network conditions; adjust Inspector parameters (e.g., `SnapshotRateHz`, reconcile thresholds) and confirm improvements.
+- [x] Agent: Disable `NetworkTransform` at runtime on `PigPlayer` to avoid fighting prediction.
+- [x] Agent: Add `PigVisualController` and wire it from `NetworkPig` (Animator.Speed + two particle tiers by normalized speed).
+- [x] Agent: Add `NetworkStatusUI` (UGS vs Direct badge + details) and `NetworkHubUI` (single panel control).
 
 ## Optional — Client-Authoritative Mode
 - [x] Agent: Add `Authority` toggle on `NetworkPig` (ServerAuthoritative | ClientAuthoritative).
@@ -63,12 +66,12 @@ Shared checklist for building a Netcode for GameObjects (NGO) game. Each item is
 - Keep MonoBehaviours thin; where needed, add public methods/events to allow PlayMode tests to drive behavior without physics.
 - Name tests `ClassNameTests.cs` and keep them focused and deterministic (no real time dependence beyond passed timestamps).
 
-## Phase 6 — Online Services (Unified + Relay Fallback)
-- [x] Agent: Add unified join‑code flow stubs (`MultiplayerServicesConnector`) and Relay fallback (`RelayLobbyService` + `RelayLobbyUI`).
-- [ ] You: Configure UGS project; Preferred: install `com.unity.services.multiplayer`. Fallback: install `com.unity.services.relay` + `com.unity.services.authentication`.
-- [ ] Agent: Wire `MultiplayerServicesConnector.InitializeAsync/CreateSessionAsync/JoinSessionAsync` to the new Multiplayer Services APIs and configure `UnityTransport` endpoints.
-- [ ] You: Validate Host/Join with Multiplayer (if available). If not, validate Relay flow end‑to‑end (join code connect across networks).
-- [ ] Agent: Document package versions used and any environment config needed (Services environment, project ID) in README.
+## Phase 6 — Online Services (UGS Relay)
+- [x] Agent: Implement Relay-based host/join: allocate/join via `RelayService`, configure `UnityTransport` with `RelayServerData` (DTLS), explicitly start Host/Client.
+- [x] Agent: Smart `NetworkBootstrap` buttons: prefer UGS Relay when available; fallback to direct IP.
+- [x] Agent: `NetworkStatusUI` reads active path and shows emoji + details.
+- [x] You: Link UGS project and ensure same environment on host/client. Validate fresh join codes (trim/uppercase handled).
+- [ ] Agent: Add optional UI (copy-to-clipboard, join-code timer) for better UX.
 
 ## Phase 7 — Stretch Content
 - [ ] Items (pads, oil, bash); ghosts/replays; photo mode.
@@ -78,3 +81,5 @@ Shared checklist for building a Netcode for GameObjects (NGO) game. Each item is
 - [ ] Cache manager references to avoid `FindObjectOfType` in hot paths.
 - [ ] PlayMode smoke tests for spectator/rejoin flows.
 - [ ] Prefab a ready‑to‑use online UI (host/join panel).
+- [ ] Input Actions asset for rebindable camera/menus.
+- [ ] Session cleanup actions (delete/leave) to recycle join codes without restarting.

@@ -41,6 +41,8 @@ namespace PiggyRace.Networking
 
         private PigMotor _motor;
         private Rigidbody _rb;
+        [SerializeField] private PigVisualController _visual; // assign in Inspector; auto-fallback if null
+        private Vector3 _lastPos;
 
         // Last input seen by server
         private float _inThrottle;
@@ -140,6 +142,10 @@ namespace PiggyRace.Networking
                 }
             }
 
+            // visuals
+            if (_visual == null) _visual = GetComponentInChildren<PigVisualController>();
+            _lastPos = transform.position;
+
             if (IsClient)
             {
                 NetPos.OnValueChanged += OnNetPosChanged;
@@ -223,6 +229,27 @@ namespace PiggyRace.Networking
             }
 
             // Owner reconciliation handled via targeted snapshots; avoid constant blending to NetVars
+
+            // Visuals: compute normalized speed and update animator/particles on all peers
+            float speed = 0f;
+            if (_rb != null && !_rb.isKinematic)
+            {
+                var v = _rb.linearVelocity; // Unity 6 Rigidbody linearVelocity
+                speed = new Vector3(v.x, 0f, v.z).magnitude;
+            }
+            else
+            {
+                Vector3 delta = transform.position - _lastPos;
+                if (dt > 0f) speed = new Vector3(delta.x, 0f, delta.z).magnitude / dt;
+            }
+            float norm = MaxSpeed > 0f ? Mathf.Clamp01(speed / MaxSpeed) : 0f;
+            _visual?.SpeedUpdate(norm);
+            _lastPos = transform.position;
+        }
+
+        private void OnValidate()
+        {
+            if (_visual == null) _visual = GetComponentInChildren<PigVisualController>();
         }
 
         private void FixedUpdate()
