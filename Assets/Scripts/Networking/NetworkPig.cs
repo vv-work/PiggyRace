@@ -6,12 +6,16 @@ using System.Collections.Generic;
 
 namespace PiggyRace.Networking
 {
-    // Networked pig controller using server-authoritative simulation and simple client prediction/smoothing.
+    // Networked pig controller using server-authoritative simulation by default,
+    // with optional client-authoritative mode for ultra-smooth local feel.
     [DisallowMultipleComponent]
     public class NetworkPig : NetworkBehaviour
     {
+        public enum AuthorityMode : byte { ServerAuthoritative = 0, ClientAuthoritative = 1 }
         [Header("Debug")]
         public bool VerboseLogs = false;
+        [Header("Authority")]
+        public AuthorityMode Authority = AuthorityMode.ServerAuthoritative;
         [Header("Tuning (mirrors PigMotor)")]
         public float MaxSpeed = 16f;
         public float ReverseSpeed = 8f;
@@ -64,8 +68,16 @@ namespace PiggyRace.Networking
             _rb = GetComponent<Rigidbody>();
             if (_rb != null)
             {
-                // Server simulates physics with a dynamic body; clients use kinematic for visual smoothing/prediction.
-                _rb.isKinematic = !IsServer;
+                if (Authority == AuthorityMode.ServerAuthoritative)
+                {
+                    // Server simulates physics; clients are kinematic
+                    _rb.isKinematic = !IsServer;
+                }
+                else
+                {
+                    // Client-authoritative: only the owner simulates; all others are kinematic (including server replica)
+                    _rb.isKinematic = !(IsOwner);
+                }
                 _rb.interpolation = RigidbodyInterpolation.Interpolate;
             }
 
@@ -170,7 +182,7 @@ namespace PiggyRace.Networking
             if (IsOwner && IsClient)
             {
                 // Prediction step on client when not server
-                if (!IsServer)
+                if (!IsServer && Authority == AuthorityMode.ServerAuthoritative)
                 {
                     float th = raceActive ? _locThrottle : 0f;
                     float st = raceActive ? _locSteer : 0f;
@@ -184,40 +196,66 @@ namespace PiggyRace.Networking
                     if (_inputBuf.Count > 512) _inputBuf.RemoveRange(0, _inputBuf.Count - 512);
                     if (_stateBuf.Count > 512) _stateBuf.RemoveRange(0, _stateBuf.Count - 512);
                 }
+                // Client-authoritative: owner always simulates locally
+                if (Authority == AuthorityMode.ClientAuthoritative)
+                {
+                    float th = raceActive ? _locThrottle : 0f;
+                    float st = raceActive ? _locSteer : 0f;
+                    bool br = raceActive && _locBrake;
+                    bool dr = raceActive && _locDrift;
+                    bool bo = raceActive && _locBoost;
+                    StepAndApply(dt, th, st, br, dr, bo, RotationSpeedDeg);
+                    if (!IsServer)
+                    {
+                        SubmitOwnerStateServerRpc(transform.position, transform.eulerAngles.y);
+                    }
+                }
                 // Send input to server each fixed step
-                SubmitInputServerRpc(
+                if (Authority == AuthorityMode.ServerAuthoritative)
+                {
+                    SubmitInputServerRpc(
                     raceActive ? _locThrottle : 0f,
                     raceActive ? _locSteer : 0f,
                     raceActive && _locBrake,
                     raceActive && _locDrift,
                     raceActive && _locBoost,
                     _localTick);
-                _localTick++;
+                    _localTick++;
+                }
             }
 
             if (IsServer)
             {
-                // Authoritative physics on server: drive Rigidbody velocity and rotation
-                float th = raceActive ? _inThrottle : 0f;
-                float st = raceActive ? _inSteer : 0f;
-                bool br = raceActive && _inBrake;
-                bool dr = raceActive && _inDrift;
-                bool bo = raceActive && _inBoost;
-                var (delta, targetYaw) = _motor.Step(dt, th, st, br, dr, bo);
-                ApplyTransform(delta, targetYaw, RotationSpeedDeg);
-                NetPos.Value = transform.position;
-                NetYaw.Value = transform.eulerAngles.y;
-                // Send owner authoritative snapshot for reconciliation (only if owner is a remote client)
-                if (OwnerClientId != NetworkManager.ServerClientId)
+                if (Authority == AuthorityMode.ServerAuthoritative)
                 {
-                    var sendTo = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } } };
-                    OwnerStateClientRpc(transform.position, transform.eulerAngles.y, _serverTick, _lastClientTickReceivedByServer, sendTo);
+                    // Authoritative physics on server
+                    float th = raceActive ? _inThrottle : 0f;
+                    float st = raceActive ? _inSteer : 0f;
+                    bool br = raceActive && _inBrake;
+                    bool dr = raceActive && _inDrift;
+                    bool bo = raceActive && _inBoost;
+                    var (delta, targetYaw) = _motor.Step(dt, th, st, br, dr, bo);
+                    ApplyTransform(delta, targetYaw, RotationSpeedDeg);
+                    NetPos.Value = transform.position;
+                    NetYaw.Value = transform.eulerAngles.y;
+                    // Send owner authoritative snapshot for reconciliation (only if owner is a remote client)
+                    if (OwnerClientId != NetworkManager.ServerClientId)
+                    {
+                        var sendTo = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } } };
+                        OwnerStateClientRpc(transform.position, transform.eulerAngles.y, _serverTick, _lastClientTickReceivedByServer, sendTo);
+                    }
+                    _serverTick++;
+                    if (VerboseLogs && Time.time - _lastInputLogTime > 0.5f)
+                    {
+                        _lastInputLogTime = Time.time;
+                        Debug.Log($"[NetworkPig][Server] step owner={OwnerClientId} pos={transform.position}");
+                    }
                 }
-                _serverTick++;
-                if (VerboseLogs && Time.time - _lastInputLogTime > 0.5f)
+                else
                 {
-                    _lastInputLogTime = Time.time;
-                    Debug.Log($"[NetworkPig][Server] step owner={OwnerClientId} pos={transform.position}");
+                    // Client-authoritative: server just echoes state for remotes; host-owner uses its local sim
+                    NetPos.Value = transform.position;
+                    NetYaw.Value = transform.eulerAngles.y;
                 }
             }
         }
@@ -346,6 +384,17 @@ namespace PiggyRace.Networking
                 transform.position = pos;
                 transform.rotation = Quaternion.Euler(0f, yaw, 0f);
             }
+        }
+
+        // Client-authoritative: client pushes its current state to server for distribution
+        [ServerRpc(RequireOwnership = true)]
+        private void SubmitOwnerStateServerRpc(Vector3 position, float yaw, ServerRpcParams rpcParams = default)
+        {
+            if (Authority != AuthorityMode.ClientAuthoritative) return;
+            if (rpcParams.Receive.SenderClientId != OwnerClientId) return;
+            SetTransform(position, yaw);
+            NetPos.Value = position;
+            NetYaw.Value = yaw;
         }
 
         [ClientRpc]

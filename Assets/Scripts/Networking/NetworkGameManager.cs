@@ -19,6 +19,7 @@ namespace PiggyRace.Networking
         [Header("Race Settings")]
         [SerializeField] private int totalLaps = 3;
         [SerializeField] private float countdownSeconds = 3f;
+        [SerializeField] private bool autoStartOnHost = false;
 
         public NetworkVariable<RacePhase> Phase = new NetworkVariable<RacePhase>(
             RacePhase.Lobby, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -30,6 +31,16 @@ namespace PiggyRace.Networking
             0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         public int TotalLaps => totalLaps;
+
+        public override void OnNetworkSpawn()
+        {
+            if (!IsServer) return;
+            if (autoStartOnHost && Phase.Value == RacePhase.Lobby)
+            {
+                Phase.Value = RacePhase.Countdown;
+                Countdown.Value = Mathf.Max(1f, countdownSeconds);
+            }
+        }
 
         private void Update()
         {
@@ -78,4 +89,3 @@ namespace PiggyRace.Networking
         }
     }
 }
-

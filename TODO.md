@@ -43,7 +43,7 @@ Shared checklist for building a Netcode for GameObjects (NGO) game. Each item is
 - [x] Agent: Gate `NetworkPig` input by `RacePhase` (no driving before race).
 - [ ] Agent: Basic HUD bindings (laps/phase/time) — minimal TMP readout.
 - [ ] Agent: PlayMode smoke test for checkpoint trigger wiring (optional if flaky in CI).
-- [ ] You: Build a simple track, place checkpoints as children of a `TrackManager`, set lap count and spawn points.
+- [x] You: Build a simple track, place checkpoints as children of a `TrackManager`, set lap count and spawn points.
 - [ ] You: Run Host + Client; start countdown; confirm spawn, lap counting, and race finish flag.
 
 ## Phace 5 — Resilience & Polish
@@ -51,6 +51,11 @@ Shared checklist for building a Netcode for GameObjects (NGO) game. Each item is
 - [ ] Agent: Rejoin/spectate when a client reconnects mid‑race.
 - [ ] Agent: Tune buffers/rates under latency/jitter/loss; add tests where possible.
 - [ ] You: Validate stability under simulated network conditions; adjust Inspector parameters (e.g., interpolation delay) and confirm improvements.
+
+## Optional — Client-Authoritative Mode
+- [x] Agent: Add `Authority` toggle on `NetworkPig` (ServerAuthoritative | ClientAuthoritative).
+- [x] Agent: Client-authoritative owner simulates locally, pushes state to server via RPC; server echoes to remotes.
+- [ ] You: Use this only for demos/prototyping; switch back to server-authoritative before shipping.
 
 ## Testing Guidelines (Expanded)
 - Prefer EditMode tests for rules: checkpoint order, lap completion, sector time accumulation, race finish conditions.

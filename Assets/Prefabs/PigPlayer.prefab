@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8969344974305068347}
   - component: {fileID: 817133618219408137}
   - component: {fileID: 2121634388669852230}
+  - component: {fileID: 5877299820444435486}
   m_Layer: 0
   m_Name: PigPlayer
   m_TagString: Untagged
@@ -151,6 +152,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: PiggyRace.Runtime::PiggyRace.Networking.NetworkPig
   ShowTopMostFoldoutHeaderGroup: 1
   VerboseLogs: 0
+  Authority: 1
   MaxSpeed: 64
   ReverseSpeed: 8
   Accel: 20
@@ -166,6 +168,26 @@ MonoBehaviour:
   OwnerReconcileThreshold: 1
   OwnerReconcileRate: 10
   OwnerLerpRate: 8
+--- !u!114 &5877299820444435486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 901847204504983317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1cefb9c7cd794a49b029a2a8f9e96ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PiggyRace.Runtime::PiggyRace.Gameplay.Race.LapTracker
+  ShowTopMostFoldoutHeaderGroup: 1
+  track: {fileID: 0}
+  CurrentLap:
+    m_InternalValue: 0
+  NextCheckpoint:
+    m_InternalValue: 0
+  Finished:
+    m_InternalValue: 0
 --- !u!1 &3810879831419704706
 GameObject:
   m_ObjectHideFlags: 0

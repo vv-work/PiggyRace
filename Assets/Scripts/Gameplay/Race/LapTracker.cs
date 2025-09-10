@@ -9,6 +9,9 @@ namespace PiggyRace.Gameplay.Race
     public class LapTracker : NetworkBehaviour
     {
         [SerializeField] private TrackManager track;
+        [Header("Guidance")]
+        [SerializeField] private Transform nextCheckpointArrow; // Optional: arrow that points to the next checkpoint
+        [SerializeField] private bool hideArrowWhenFinished = true;
 
         private readonly LapTrackerLogic logic = new LapTrackerLogic();
 
@@ -38,6 +41,32 @@ namespace PiggyRace.Gameplay.Race
             }
         }
 
+        private void Update()
+        {
+            // Local visual guidance: point arrow towards the next checkpoint
+            if (nextCheckpointArrow == null || track == null) return;
+            if (hideArrowWhenFinished && Finished.Value)
+            {
+                if (nextCheckpointArrow.gameObject.activeSelf) nextCheckpointArrow.gameObject.SetActive(false);
+                return;
+            }
+            else if (!nextCheckpointArrow.gameObject.activeSelf)
+            {
+                nextCheckpointArrow.gameObject.SetActive(true);
+            }
+
+            int idx = Mathf.Clamp(NextCheckpoint.Value, 0, Mathf.Max(0, track.CheckpointCount - 1));
+            if (track.Checkpoints == null || track.Checkpoints.Count == 0) return;
+            var cp = track.Checkpoints[idx]; if (cp == null) return;
+            Vector3 target = cp.transform.position;
+            Vector3 dir = target - nextCheckpointArrow.position;
+            dir.y = 0f;
+            if (dir.sqrMagnitude > 0.0001f)
+            {
+                nextCheckpointArrow.rotation = Quaternion.LookRotation(dir.normalized, Vector3.up);
+            }
+        }
+
         private void OnTriggerEnter(Collider other)
         {
             if (!IsServer) return;
@@ -60,4 +89,3 @@ namespace PiggyRace.Gameplay.Race
         }
     }
 }
-

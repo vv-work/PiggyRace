@@ -55,6 +55,7 @@ Key principles: server authoritative simulation; client-side prediction for loca
 - RPCs (`ServerRpc`/`ClientRpc`) for input submission and events.
 - `NetworkVariable<T>` for shared race state (phase, countdown, lap totals).
 - `NetworkTransform` or custom transform sync + smoothing for remote players.
+- Optional client-authoritative mode (per-pig) for extra-smooth local feel: owner simulates locally and sends state to host, which echoes to remotes. Use only for prototypes — not secure against cheating.
 - Optional: Unity Relay + Lobby for discovery and NAT traversal.
 
 ## Development Setup
@@ -94,6 +95,14 @@ License: TBD
 - Create Track Loop: specify checkpoint count, ellipse radii, start angle, and checkpoint trigger size; click "Create TrackManager + Loop" to generate a `TrackManager` with ordered `Checkpoint` children.
 - Spawn Grid: set count, columns, row/column spacing; click "Add/Replace Spawn Points At Start" to populate spawn points behind checkpoint 0, aligned with its forward.
 - Quick action: `Tools → PiggyRace → Create Track Loop (Quick)` uses defaults to create a loop fast.
+
+## Minimal Race HUD
+- Component: `PiggyRace.UI.RaceHUD`
+- Shows: `Phase`, `Countdown`, and local `Lap/Total` using a TMP Text.
+- How to use:
+  - Create a Canvas → TextMeshPro - Text (UI) in your scene.
+  - Add `RaceHUD` to the TMP object and assign its `TMP_Text` field (or let it auto-grab).
+  - Ensure your player prefab has `LapTracker` and the scene has `NetworkGameManager`.
 
 
 ---
