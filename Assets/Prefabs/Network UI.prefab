@@ -44,6 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cb192ffbc7ae4e7482b51d738d2fffa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PiggyRace.Runtime::PiggyRace.Networking.NetworkBootstrap
+  ugsMaxConnections: 8
+  clientJoinCodeOverride: 
 --- !u!1 &524054291286924531
 GameObject:
   m_ObjectHideFlags: 0
@@ -403,7 +405,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ugs: {fileID: 3473597587165602479}
   ngo: {fileID: 0}
-  joinCodeInput: {fileID: 5738397092938260416}
+  joinCodeInput: {fileID: 0}
   statusText: {fileID: 3731716372492065945}
   maxConnections: 8
 --- !u!1 &1470492132806982252
@@ -1819,17 +1821,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
---- !u!114 &5738397092938260416 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 292626360573699161, guid: b12cf35eaaab94c26a1a4649719d8c94, type: 3}
-  m_PrefabInstance: {fileID: 5453155320934251417}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_InputField
 --- !u!1001 &7170993271658911720
 PrefabInstance:
   m_ObjectHideFlags: 0
