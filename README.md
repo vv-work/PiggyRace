@@ -4,6 +4,13 @@
 
 Arcade online racing where players ride boosty pigs around fun tracks. This repository is Netcode for GameObjects (NGO)–based: Unity 6.2 (URP) + NGO 2.5.0 with a server‑authoritative model, client prediction, and interpolation. UI uses TextMeshPro (TMP).
 
+Current status (snapshot)
+- Physics‑correct pig control with server authority and client prediction/reconciliation.
+- TDD race loop: checkpoints, lap tracking, countdown, spawns, finish state.
+- Editor track tools: quick loop generation and spawn grid.
+- Minimal TMP HUD: phase, countdown, lap/total, checkpoint progress + arrow to next checkpoint.
+- Online services scaffold: unified Multiplayer Services flow with Relay fallback; simple host/join UI.
+
 ---
 
 
@@ -18,7 +25,11 @@ Arcade online racing where players ride boosty pigs around fun tracks. This repo
 - Scenes/Prefabs: `Assets/Scenes`, `Assets/Prefabs`, `Assets/Settings`.
 - Packages: `Packages/manifest.json` (Unity 6.2, NGO 2.5.0, UTP).
 
-Planned networking scripts will live under `Assets/Scripts/Networking/` (e.g., `NetworkGameManager`, `PlayerConnection`, `Spawning`).
+Key scripts (implemented)
+- Networking: `Assets/Scripts/Networking/NetworkPig.cs`, `PlayerSpawner.cs`, `MovementValidator.cs`.
+- Race: `Assets/Scripts/Gameplay/Race/{TrackManager.cs,Checkpoint.cs,LapTracker.cs,LapTrackerLogic.cs}`.
+- UI: `Assets/Scripts/UI/RaceHUD.cs`.
+- UGS glue: `Assets/Scripts/Networking/UGS/{RelayLobbyService.cs,RelayLobbyUI.cs,MultiplayerServicesConnector.cs}`.
 
 ## Architecture Snapshot
 ```mermaid
@@ -66,12 +77,24 @@ Key principles: server authoritative simulation; client-side prediction for loca
 - Editor: Fixed Timestep 0.0167s (60 Hz). Avoid frame-dependent logic in simulation.
 - Tests: Window → General → Test Runner → Run All (or CLI flags in AGENTS.md).
 
+Packages to import (minimum)
+- `com.unity.inputsystem` (Input System)
+- `com.unity.netcode.gameobjects` (NGO 2.5.0)
+- `com.unity.transport` (UTP)
+- `com.unity.textmeshpro`
+- Optional online: `com.unity.services.multiplayer` (unified), or `com.unity.services.relay` (+ `com.unity.services.authentication`)
+
+Scenes/Prefabs
+- `Assets/Prefabs/Systems/NetworkManager` with `UnityTransport`
+- Scenes: `MainMenu`, `Lobby`, `Race` (you can start with a single test scene)
+
 ## Step-by-Step Milestones
 1) Plumbing: add packages, NetworkManager prefab, scenes (MainMenu, Lobby, Race).
 2) Movement: `PigMotor` + `PigController` + follow camera.
 3) Netcode core (NGO): ticks/time sync, input via `ServerRpc`, server sim on host, state sync via `NetworkVariable`/RPC, prediction + reconciliation on client, smoothing for remotes.
 4) Race loop (TDD): checkpoints, lap tracker, spawns, countdown, HUD, results — with EditMode tests for lap/sector logic and minimal PlayMode smoke checks.
 5) Resilience/polish: anti-cheat checks, rejoin/spectate, net-sim tuning.
+6) Online services: unified Multiplayer Services (preferred) with join code flow and Relay fallback. Simple host/join UI included.
 
 See TODO.md for an actionable, checkpointed plan with “Agent does / You do” for each step.
 
@@ -122,3 +145,44 @@ How to use in a scene
 
 Tests
 - EditMode: `PigMotorTests` validate acceleration/turning, drift turn rate, boost effect.
+
+
+## Online Services (Multiplayer + Relay)
+This project includes a unified join‑code flow for online play. It prefers the new Multiplayer Services package and cleanly falls back to Relay when Multiplayer is not installed.
+
+Packages
+- Preferred (unified): `com.unity.services.multiplayer`
+- Fallback (legacy): `com.unity.services.relay` and `com.unity.services.authentication`
+
+Compilation guards
+- Code paths for Multiplayer/Relay are wrapped in defines (e.g., `UGS_MULTIPLAYER`, `UGS_RELAY`). When the packages are absent, the scripts compile but UI will show an info message.
+
+Scene wiring
+- Add `RelayLobbyService` (any GameObject).
+- Add `RelayLobbyUI` to your existing network UI and wire fields:
+  - `Join Code Input` (TMP_InputField), `Status Text` (TMP_Text), and optional `Max Connections`.
+  - Buttons: bind to `InitializeUGS`, `HostWithRelay`, and `JoinWithRelay`.
+
+Usage
+1) Click Initialize UGS (once per run). It initializes Services and anonymous auth.
+2) Host: with Multiplayer installed, clicking Host creates a session, outputs a join code, and automatically starts Host via NGO. Without Multiplayer, Relay allocation is used and Host starts as before.
+3) Join: paste the join code and Start Client.
+
+Security
+- Client-authoritative mode is for prototypes. Use server-authoritative with prediction + reconciliation for shipping.
+
+UGS Setup (one-time per project)
+1) Open Unity → Window → Services. Create or link a UGS project for your game.
+2) Preferred: install `com.unity.services.multiplayer` (join‑code sessions). If not available, install `com.unity.services.relay` + `com.unity.services.authentication` for fallback.
+3) Enable the services you installed in the UGS dashboard (Authentication for Relay; Multiplayer for unified).
+4) In Unity, ensure `NetworkManager` uses `UnityTransport` on your bootstrap object.
+5) Defines are handled in code/asmdef; when packages are absent, UI prints clear messages and skips network allocation.
+
+Inspector tuning (quick reference)
+- `NetworkPig`: `Authority` (ServerAuthoritative | ClientAuthoritative), `SnapshotRateHz`, `RemoteLerpRate`, `OwnerReconcileThreshold`.
+- `MovementValidator`: tune max speed/yaw limits in `NetworkPig` fields that call it.
+- `LapTracker`: assign `TrackManager`, laps, and optional arrow transform for next‑checkpoint indicator.
+
+Scene bootstrap (ensuring players spawn and race scene loads)
+- Add `AutoPlayerSpawner` to any persistent object in your starting scene. It ensures a player object is spawned for each client if NGO doesn’t auto‑spawn.
+- Add `NetworkSceneBootstrap` to your starting scene and set `Scene Name` to `Race`. When the server/host starts, it loads the Race scene via NGO SceneManager so that `NetworkGameManager`, `TrackManager`, and checkpoints exist for all peers.

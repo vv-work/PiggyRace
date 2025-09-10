@@ -34,6 +34,10 @@ namespace PiggyRace.Networking
         public float OwnerReconcileThreshold = 1.0f; // meters
         public float OwnerReconcileRate = 10f;
         public float OwnerLerpRate = 8f; // always blend owner to server state (client-only)
+        [Header("Net Tuning")]
+        public float SnapshotRateHz = 30f;
+        public float MaxClientSpeed = 35f; // m/s validation for client-authoritative state
+        public float MaxClientYawRateDeg = 540f; // deg/s validation for client-authoritative state
 
         private PigMotor _motor;
         private Rigidbody _rb;
@@ -53,6 +57,8 @@ namespace PiggyRace.Networking
             default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private NetworkVariable<float> NetYaw = new NetworkVariable<float>(
             0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<bool> IsSpectator = new NetworkVariable<bool>(
+            false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         // Prediction & reconciliation (owner-client)
         private struct InputCmd { public int tick; public float th, st; public bool br, dr, bo; }
@@ -62,6 +68,11 @@ namespace PiggyRace.Networking
         private int _localTick;
         private int _serverTick;
         private int _lastClientTickReceivedByServer;
+        private float _svSnapshotAccum;
+        private Vector3 _svLastPos;
+        private float _svLastYaw;
+        private float _svLastTime;
+        private bool _svHasLast;
 
         public override void OnNetworkSpawn()
         {
@@ -101,6 +112,12 @@ namespace PiggyRace.Networking
             {
                 NetPos.Value = transform.position;
                 NetYaw.Value = yaw;
+                var gm = Object.FindObjectOfType<NetworkGameManager>();
+                if (gm != null && gm.Phase.Value != RacePhase.Lobby)
+                {
+                    // Late joiners during active race become spectators
+                    IsSpectator.Value = true;
+                }
             }
 
             if (IsOwner)
@@ -179,16 +196,17 @@ namespace PiggyRace.Networking
             float dt = Time.fixedDeltaTime;
             var gm = Object.FindObjectOfType<NetworkGameManager>();
             bool raceActive = gm == null || gm.Phase.Value == RacePhase.Race;
+            bool canDrive = raceActive && !IsSpectator.Value;
             if (IsOwner && IsClient)
             {
                 // Prediction step on client when not server
                 if (!IsServer && Authority == AuthorityMode.ServerAuthoritative)
                 {
-                    float th = raceActive ? _locThrottle : 0f;
-                    float st = raceActive ? _locSteer : 0f;
-                    bool br = raceActive && _locBrake;
-                    bool dr = raceActive && _locDrift;
-                    bool bo = raceActive && _locBoost;
+                    float th = canDrive ? _locThrottle : 0f;
+                    float st = canDrive ? _locSteer : 0f;
+                    bool br = canDrive && _locBrake;
+                    bool dr = canDrive && _locDrift;
+                    bool bo = canDrive && _locBoost;
                     var cmd = new InputCmd { tick = _localTick, th = th, st = st, br = br, dr = dr, bo = bo };
                     _inputBuf.Add(cmd);
                     StepAndApply(dt, cmd.th, cmd.st, cmd.br, cmd.dr, cmd.bo, RotationSpeedDeg);
@@ -199,11 +217,11 @@ namespace PiggyRace.Networking
                 // Client-authoritative: owner always simulates locally
                 if (Authority == AuthorityMode.ClientAuthoritative)
                 {
-                    float th = raceActive ? _locThrottle : 0f;
-                    float st = raceActive ? _locSteer : 0f;
-                    bool br = raceActive && _locBrake;
-                    bool dr = raceActive && _locDrift;
-                    bool bo = raceActive && _locBoost;
+                    float th = canDrive ? _locThrottle : 0f;
+                    float st = canDrive ? _locSteer : 0f;
+                    bool br = canDrive && _locBrake;
+                    bool dr = canDrive && _locDrift;
+                    bool bo = canDrive && _locBoost;
                     StepAndApply(dt, th, st, br, dr, bo, RotationSpeedDeg);
                     if (!IsServer)
                     {
@@ -214,11 +232,11 @@ namespace PiggyRace.Networking
                 if (Authority == AuthorityMode.ServerAuthoritative)
                 {
                     SubmitInputServerRpc(
-                    raceActive ? _locThrottle : 0f,
-                    raceActive ? _locSteer : 0f,
-                    raceActive && _locBrake,
-                    raceActive && _locDrift,
-                    raceActive && _locBoost,
+                    canDrive ? _locThrottle : 0f,
+                    canDrive ? _locSteer : 0f,
+                    canDrive && _locBrake,
+                    canDrive && _locDrift,
+                    canDrive && _locBoost,
                     _localTick);
                     _localTick++;
                 }
@@ -229,18 +247,21 @@ namespace PiggyRace.Networking
                 if (Authority == AuthorityMode.ServerAuthoritative)
                 {
                     // Authoritative physics on server
-                    float th = raceActive ? _inThrottle : 0f;
-                    float st = raceActive ? _inSteer : 0f;
-                    bool br = raceActive && _inBrake;
-                    bool dr = raceActive && _inDrift;
-                    bool bo = raceActive && _inBoost;
+                    float th = canDrive ? _inThrottle : 0f;
+                    float st = canDrive ? _inSteer : 0f;
+                    bool br = canDrive && _inBrake;
+                    bool dr = canDrive && _inDrift;
+                    bool bo = canDrive && _inBoost;
                     var (delta, targetYaw) = _motor.Step(dt, th, st, br, dr, bo);
                     ApplyTransform(delta, targetYaw, RotationSpeedDeg);
                     NetPos.Value = transform.position;
                     NetYaw.Value = transform.eulerAngles.y;
-                    // Send owner authoritative snapshot for reconciliation (only if owner is a remote client)
-                    if (OwnerClientId != NetworkManager.ServerClientId)
+                    // Send owner authoritative snapshot for reconciliation (only if owner is a remote client), throttled
+                    _svSnapshotAccum += dt;
+                    float interval = SnapshotRateHz > 0f ? (1f / SnapshotRateHz) : 0f;
+                    if (OwnerClientId != NetworkManager.ServerClientId && _svSnapshotAccum >= interval)
                     {
+                        _svSnapshotAccum = 0f;
                         var sendTo = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } } };
                         OwnerStateClientRpc(transform.position, transform.eulerAngles.y, _serverTick, _lastClientTickReceivedByServer, sendTo);
                     }
@@ -392,6 +413,22 @@ namespace PiggyRace.Networking
         {
             if (Authority != AuthorityMode.ClientAuthoritative) return;
             if (rpcParams.Receive.SenderClientId != OwnerClientId) return;
+            // Server-side validation/clamping
+            float now = NetworkManager.ServerTime.TimeAsFloat;
+            if (_svHasLast)
+            {
+                MovementValidator.ClampState(_svLastPos, _svLastYaw, _svLastTime,
+                    position, yaw, now,
+                    MaxClientSpeed, MaxClientYawRateDeg,
+                    out var clampedPos, out var clampedYaw);
+                position = clampedPos;
+                yaw = clampedYaw;
+            }
+            _svLastPos = position;
+            _svLastYaw = yaw;
+            _svLastTime = now;
+            _svHasLast = true;
+
             SetTransform(position, yaw);
             NetPos.Value = position;
             NetYaw.Value = yaw;

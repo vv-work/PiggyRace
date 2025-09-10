@@ -1,20 +1,42 @@
 {
-  "name": "PiggyRace.Runtime",
-  "rootNamespace": "PiggyRace",
-  "references": [
-    "Unity.InputSystem",
-    "Unity.Netcode.Runtime",
-    "Unity.Collections",
-    "Unity.TextMeshPro",
-    "Unity.Cinemachine"
-  ],
-  "includePlatforms": [],
-  "excludePlatforms": [],
-  "allowUnsafeCode": false,
-  "overrideReferences": false,
-  "precompiledReferences": [],
-  "autoReferenced": true,
-  "defineConstraints": [],
-  "versionDefines": [],
-  "noEngineReferences": false
+    "name": "PiggyRace.Runtime",
+    "rootNamespace": "PiggyRace",
+    "references": [
+        "Unity.InputSystem",
+        "Unity.Netcode.Runtime",
+        "Unity.Collections",
+        "Unity.TextMeshPro",
+        "Unity.Cinemachine",
+        "Unity.Services.Core",
+        "Unity.Services.Authentication",
+        "Unity.Services.Relay",
+        "Unity.Networking.Transport",
+        "Unity.Services.Multiplayer.Multiplay",
+        "Unity.Services.Multiplayer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.services.relay",
+            "expression": "1.0.0",
+            "define": "UGS_RELAY"
+        },
+        {
+            "name": "com.unity.services.authentication",
+            "expression": "1.0.0",
+            "define": "UGS_AUTH"
+        },
+        {
+            "name": "com.unity.services.multiplayer",
+            "expression": "1.0.0",
+            "define": "UGS_MULTIPLAYER"
+        }
+    ],
+    "noEngineReferences": false
 }
