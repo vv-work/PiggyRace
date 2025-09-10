@@ -1,8 +1,11 @@
 # PiggyRace
 
+![PiggyRace gif](./img/PigRacer.webp)
+
 Arcade online racing where players ride boosty pigs around fun tracks. This repository is Netcode for GameObjects (NGO)–based: Unity 6.2 (URP) + NGO 2.5.0 with a server‑authoritative model, client prediction, and interpolation. UI uses TextMeshPro (TMP).
 
 ---
+
 
 ## How We Build This Together (You + Agent)
 - Agent: scaffolds folders/scripts, writes tests first, applies small patches, explains changes.
