@@ -33,12 +33,7 @@ namespace PiggyRace.Networking.UGS
             string code = await service.CreateJoinCodeAsync(maxConnections);
             if (string.IsNullOrEmpty(code)) { SetStatus("Allocation/session failed"); return; }
             SetStatus($"Join Code: {code}");
-#if UGS_MULTIPLAYER
-            // Multiplayer package auto-starts Host via NGO handler.
-            Debug.Log("[UGS UI] Host started via Multiplayer session.");
-#else
             NetworkManager.Singleton?.StartHost();
-#endif
         }
 
         public async void JoinWithRelay()
@@ -49,12 +44,7 @@ namespace PiggyRace.Networking.UGS
             SetStatus("Joining session...");
             bool ok = await service.JoinByCodeAsync(code);
             if (!ok) { SetStatus("Join failed"); return; }
-#if UGS_MULTIPLAYER
-            // Multiplayer package auto-starts Client via NGO handler.
-            Debug.Log("[UGS UI] Client started via Multiplayer session.");
-#else
             NetworkManager.Singleton?.StartClient();
-#endif
         }
 
         private void EnsureService()

@@ -76,9 +76,28 @@ namespace PiggyRace.Networking.UGS
 #if UGS_MULTIPLAYER
             try
             {
+                const string sessionType = "PiggyRace";
+
+                // If a session of this type already exists in this process, reuse it and return its code.
+                if (MultiplayerService.Instance != null && MultiplayerService.Instance.Sessions != null &&
+                    MultiplayerService.Instance.Sessions.TryGetValue(sessionType, out var existing) && existing != null)
+                {
+                    string existingCode = existing.Code;
+                    if (string.IsNullOrWhiteSpace(existingCode))
+                    {
+                        var startWait = Time.realtimeSinceStartup;
+                        while (string.IsNullOrWhiteSpace(existingCode) && Time.realtimeSinceStartup - startWait < 5f)
+                        {
+                            await Task.Delay(50);
+                            existingCode = existing.Code;
+                        }
+                    }
+                    return existingCode; // may be null if still populating; caller can retry
+                }
+
                 var options = new SessionOptions
                 {
-                    Type = "PiggyRace",
+                    Type = sessionType,
                     Name = Application.productName,
                     MaxPlayers = Mathf.Max(1, maxConns),
                     IsPrivate = false,

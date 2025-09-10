@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using UnityEngine;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
+#if UGS_MULTIPLAYER
+using Unity.Services.Relay.Models; // for AllocationUtils.ToRelayServerData
+#endif
 
 namespace PiggyRace.Networking.UGS
 {
@@ -47,33 +50,27 @@ namespace PiggyRace.Networking.UGS
 #endif
         }
 
-        // Preferred: Create a Multiplayer Services session and return a join code.
-        // Falls back to legacy Relay when the unified package is not present.
+        // Create a Relay allocation and return its join code. Works with either Multiplayer package (which includes Relay) or standalone Relay.
         public async Task<string> CreateJoinCodeAsync(int maxConns)
         {
-#if UGS_MULTIPLAYER
-            try
-            {
-                var connector = GetComponent<MultiplayerServicesConnector>() ?? gameObject.AddComponent<MultiplayerServicesConnector>();
-                if (!await connector.InitializeAsync()) return null;
-                var code = await connector.CreateSessionAsync(Mathf.Max(1, maxConns));
-                if (string.IsNullOrEmpty(code))
-                {
-                    Debug.LogWarning("[UGS] Session created, but no join code yet.");
-                }
-                return code;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[Multiplayer] Create session failed: {e}");
-                return null;
-            }
-#elif UGS_RELAY
+#if UGS_MULTIPLAYER || UGS_RELAY
             try
             {
                 var alloc = await Unity.Services.Relay.RelayService.Instance.CreateAllocationAsync(maxConns);
                 string joinCode = await Unity.Services.Relay.RelayService.Instance.GetJoinCodeAsync(alloc.AllocationId);
-                var dt = new Unity.Networking.Transport.Relay.RelayServerData(alloc, "dtls");
+#if UGS_MULTIPLAYER
+                var dt = alloc.ToRelayServerData("dtls");
+#else
+                var dt = new Unity.Networking.Transport.Relay.RelayServerData(
+                    alloc.ServerEndpoints[0].Host,
+                    (ushort)alloc.ServerEndpoints[0].Port,
+                    alloc.AllocationIdBytes,
+                    alloc.ConnectionData,
+                    alloc.ConnectionData,
+                    alloc.Key,
+                    alloc.ServerEndpoints[0].Secure,
+                    alloc.ServerEndpoints[0].ConnectionType == "wss");
+#endif
                 Transport?.SetRelayServerData(dt);
                 return joinCode;
             }
@@ -88,26 +85,26 @@ namespace PiggyRace.Networking.UGS
 #endif
         }
 
-        // Preferred: Join Multiplayer Services session by code. Falls back to Relay when unified package is not present.
+        // Join a Relay allocation by code and configure UnityTransport. Works with either Multiplayer package or standalone Relay.
         public async Task<bool> JoinByCodeAsync(string joinCode)
         {
-#if UGS_MULTIPLAYER
-            try
-            {
-                var connector = GetComponent<MultiplayerServicesConnector>() ?? gameObject.AddComponent<MultiplayerServicesConnector>();
-                if (!await connector.InitializeAsync()) return false;
-                return await connector.JoinSessionAsync(joinCode);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[Multiplayer] Join session failed: {e}");
-                return false;
-            }
-#elif UGS_RELAY
+#if UGS_MULTIPLAYER || UGS_RELAY
             try
             {
                 var join = await Unity.Services.Relay.RelayService.Instance.JoinAllocationAsync(joinCode);
-                var dt = new Unity.Networking.Transport.Relay.RelayServerData(join, "dtls");
+#if UGS_MULTIPLAYER
+                var dt = join.ToRelayServerData("dtls");
+#else
+                var dt = new Unity.Networking.Transport.Relay.RelayServerData(
+                    join.ServerEndpoints[0].Host,
+                    (ushort)join.ServerEndpoints[0].Port,
+                    join.AllocationIdBytes,
+                    join.ConnectionData,
+                    join.HostConnectionData,
+                    join.Key,
+                    join.ServerEndpoints[0].Secure,
+                    join.ServerEndpoints[0].ConnectionType == "wss");
+#endif
                 Transport?.SetRelayServerData(dt);
                 return true;
             }

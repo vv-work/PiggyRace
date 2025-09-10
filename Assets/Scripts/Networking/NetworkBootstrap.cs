@@ -31,7 +31,7 @@ namespace PiggyRace.Networking
             var nm = NetworkManager.Singleton;
             if (nm == null) return;
             var utp = nm.GetComponent<UnityTransport>();
-#if UGS_MULTIPLAYER
+#if UGS_MULTIPLAYER || UGS_RELAY
             try
             {
                 var svc = EnsureUgsService();
@@ -46,7 +46,7 @@ namespace PiggyRace.Networking
                         NetPathRuntimeStatus.JoinCode = code;
                         NetPathRuntimeStatus.Address = null;
                         NetPathRuntimeStatus.Port = 0;
-                        // UGS handler auto-starts NGO Host.
+                        nm.StartHost();
                         return;
                     }
                 }
@@ -66,7 +66,7 @@ namespace PiggyRace.Networking
             var nm = NetworkManager.Singleton;
             if (nm == null) return;
             var utp = nm.GetComponent<UnityTransport>();
-#if UGS_MULTIPLAYER
+#if UGS_MULTIPLAYER || UGS_RELAY
             try
             {
                 var svc = EnsureUgsService();
@@ -84,7 +84,7 @@ namespace PiggyRace.Networking
                             NetPathRuntimeStatus.JoinCode = code;
                             NetPathRuntimeStatus.Address = null;
                             NetPathRuntimeStatus.Port = 0;
-                            // UGS handler auto-starts NGO Client.
+                            nm.StartClient();
                             return;
                         }
                     }
@@ -104,7 +104,7 @@ namespace PiggyRace.Networking
             var nm = NetworkManager.Singleton;
             if (nm == null) return;
             var utp = nm.GetComponent<UnityTransport>();
-#if UGS_MULTIPLAYER
+#if UGS_MULTIPLAYER || UGS_RELAY
             // No server-only UGS flow; treat as Host
             StartHost();
             return;
