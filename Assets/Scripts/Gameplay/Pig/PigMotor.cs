@@ -32,6 +32,34 @@ namespace PiggyRace.Gameplay.Pig
         public PigMotor() { }
         public PigMotor(float initialYawDeg) { YawDeg = initialYawDeg; VelocityXZ = Vector2.zero; }
 
+        // Lightweight serializable snapshot for client prediction reconciliation
+        public struct Snapshot
+        {
+            public float YawDeg;
+            public Vector2 VelocityXZ;
+            public float BoostTimer;
+            public float CooldownTimer;
+        }
+
+        public Snapshot Capture()
+        {
+            return new Snapshot
+            {
+                YawDeg = this.YawDeg,
+                VelocityXZ = this.VelocityXZ,
+                BoostTimer = this._boostTimer,
+                CooldownTimer = this._cooldownTimer,
+            };
+        }
+
+        public void Restore(in Snapshot s)
+        {
+            this.YawDeg = s.YawDeg;
+            this.VelocityXZ = s.VelocityXZ;
+            this._boostTimer = s.BoostTimer;
+            this._cooldownTimer = s.CooldownTimer;
+        }
+
         public (Vector2 deltaXZ, float yawDeg) Step(
             float dt,
             float throttle, float steer,

@@ -66,7 +66,7 @@ Key principles: server authoritative simulation; client-side prediction for loca
 1) Plumbing: add packages, NetworkManager prefab, scenes (MainMenu, Lobby, Race).
 2) Movement: `PigMotor` + `PigController` + follow camera.
 3) Netcode core (NGO): ticks/time sync, input via `ServerRpc`, server sim on host, state sync via `NetworkVariable`/RPC, prediction + reconciliation on client, smoothing for remotes.
-4) Race loop: checkpoints, lap tracker, spawns, countdown, HUD, results.
+4) Race loop (TDD): checkpoints, lap tracker, spawns, countdown, HUD, results — with EditMode tests for lap/sector logic and minimal PlayMode smoke checks.
 5) Resilience/polish: anti-cheat checks, rejoin/spectate, net-sim tuning.
 
 See TODO.md for an actionable, checkpointed plan with “Agent does / You do” for each step.
@@ -81,6 +81,20 @@ License: TBD
 - Input: Unity Input System
 - UI: TextMeshPro (TMP)
 - Camera: Cinemachine (optional)
+ - Editor: Track Tools (Tools → PiggyRace → Track Tools) to quickly generate checkpoint loops and spawn grids.
+
+## Testing Approach (TDD)
+- Keep core rules in pure C# classes (no MonoBehaviour) and cover with EditMode tests. Example: `LapTrackerLogic` verifies ordered checkpoints, lap completion, final race state, and sector timings.
+- Keep runtime glue thin (MonoBehaviours) and add light PlayMode tests where needed to validate wiring.
+- Prefer server-authoritative code paths in tests: simulate server-side updates and assert NetworkVariables mirror expected state where feasible.
+- Physics + prediction: `PigMotor` exposes a `Snapshot` with capture/restore for deterministic rewind/replay. EditMode tests cover snapshot/restore roundtrips to support reconciliation.
+
+## Editor Track Tools
+- Open: `Tools → PiggyRace → Track Tools`.
+- Create Track Loop: specify checkpoint count, ellipse radii, start angle, and checkpoint trigger size; click "Create TrackManager + Loop" to generate a `TrackManager` with ordered `Checkpoint` children.
+- Spawn Grid: set count, columns, row/column spacing; click "Add/Replace Spawn Points At Start" to populate spawn points behind checkpoint 0, aligned with its forward.
+- Quick action: `Tools → PiggyRace → Create Track Loop (Quick)` uses defaults to create a loop fast.
+
 
 ---
 

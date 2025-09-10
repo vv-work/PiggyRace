@@ -29,22 +29,33 @@ Shared checklist for building a Netcode for GameObjects (NGO) game. Each item is
 ## Phace 3 — Networked Movement
 - [x] Agent: Implement `Networking/NetworkPig` (owner input via `ServerRpc`, server simulation with `PigMotor`, NetworkVariables for pos/yaw).
 - [x] Agent: Add client-side smoothing for remotes and light reconciliation for owners.
+- [x] Agent: Add client prediction buffers with ticked inputs and targeted owner reconciliation snapshots from server.
+- [x] Agent: Add `PigMotor` Snapshot capture/restore and unit tests for roundtrip determinism.
 - [x] You: Add `NetworkPig` to the PigPlayer prefab (remove/disable `PigController` to avoid double-move).
 - [x] You: Configure Network Simulator (latency/jitter/loss) and test; report jitter or rubber‑banding.
 - [x] You: Adjust Inspector tuning (smoothing, rotation speed, max speed) as advised; re-test.
 
-## Phace 4 — Track & Race Loop
-- [ ] Agent: `TrackManager` with ordered checkpoints and triggers.
-- [ ] Agent: `LapTracker` (laps, sector times) and HUD bindings.
-- [ ] Agent: Spawn grid + `PlayerSpawner`.
-- [ ] Agent: Countdown, race timer, results UI; sync state via `NetworkVariable`s.
-- [ ] You: Build a simple track, place and index checkpoints, set lap count in Inspector, run a 2‑player race end‑to‑end.
+## Phace 4 — Track & Race Loop (TDD First)
+- [x] Agent: Add pure `LapTrackerLogic` with unit tests (EditMode).
+- [x] Agent: `TrackManager` + `Checkpoint` components (ordered, auto-indexing).
+- [x] Agent: `LapTracker` (server-side) using logic; expose `CurrentLap`, `NextCheckpoint`, `Finished` as `NetworkVariable`s.
+- [x] Agent: Spawn grid + `PlayerSpawner` (positions players on Countdown).
+- [x] Agent: Gate `NetworkPig` input by `RacePhase` (no driving before race).
+- [ ] Agent: Basic HUD bindings (laps/phase/time) — minimal TMP readout.
+- [ ] Agent: PlayMode smoke test for checkpoint trigger wiring (optional if flaky in CI).
+- [ ] You: Build a simple track, place checkpoints as children of a `TrackManager`, set lap count and spawn points.
+- [ ] You: Run Host + Client; start countdown; confirm spawn, lap counting, and race finish flag.
 
 ## Phace 5 — Resilience & Polish
 - [ ] Agent: Anti‑cheat validations (max speed/boost, checkpoint order).
 - [ ] Agent: Rejoin/spectate when a client reconnects mid‑race.
 - [ ] Agent: Tune buffers/rates under latency/jitter/loss; add tests where possible.
 - [ ] You: Validate stability under simulated network conditions; adjust Inspector parameters (e.g., interpolation delay) and confirm improvements.
+
+## Testing Guidelines (Expanded)
+- Prefer EditMode tests for rules: checkpoint order, lap completion, sector time accumulation, race finish conditions.
+- Keep MonoBehaviours thin; where needed, add public methods/events to allow PlayMode tests to drive behavior without physics.
+- Name tests `ClassNameTests.cs` and keep them focused and deterministic (no real time dependence beyond passed timestamps).
 
 ## Phace 6 — Online Services (Optional)
 - [ ] Agent: Add Unity Relay + Lobby and simple join UI.

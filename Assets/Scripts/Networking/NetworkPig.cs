@@ -2,6 +2,7 @@ using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.InputSystem;
 using PiggyRace.Gameplay.Pig;
+using System.Collections.Generic;
 
 namespace PiggyRace.Networking
 {
@@ -48,6 +49,15 @@ namespace PiggyRace.Networking
             default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private NetworkVariable<float> NetYaw = new NetworkVariable<float>(
             0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        // Prediction & reconciliation (owner-client)
+        private struct InputCmd { public int tick; public float th, st; public bool br, dr, bo; }
+        private struct PredState { public int tick; public Vector3 pos; public float yaw; public PigMotor.Snapshot motor; }
+        private readonly List<InputCmd> _inputBuf = new List<InputCmd>(256);
+        private readonly List<PredState> _stateBuf = new List<PredState>(256);
+        private int _localTick;
+        private int _serverTick;
+        private int _lastClientTickReceivedByServer;
 
         public override void OnNetworkSpawn()
         {
@@ -149,41 +159,61 @@ namespace PiggyRace.Networking
                 SetTransform(newPos, newYaw);
             }
 
-            if (IsClient && IsOwner && !IsServer)
-            {
-                // Always blend owner towards server state to ensure visible movement even if prediction fails
-                float t = Mathf.Clamp01(OwnerLerpRate * dt);
-                Vector3 newPos = Vector3.Lerp(transform.position, NetPos.Value, t);
-                float newYaw = Mathf.MoveTowardsAngle(transform.eulerAngles.y, NetYaw.Value, RotationSpeedDeg * dt);
-                SetTransform(newPos, newYaw);
-                if (VerboseLogs && Time.time - _lastInputLogTime > 0.5f)
-                {
-                    Debug.Log($"[NetworkPig][Client {NetworkManager.LocalClientId}] blend to net pos={NetPos.Value} local={transform.position} d={(NetPos.Value-transform.position).magnitude:F2}");
-                }
-            }
+            // Owner reconciliation handled via targeted snapshots; avoid constant blending to NetVars
         }
 
         private void FixedUpdate()
         {
             float dt = Time.fixedDeltaTime;
+            var gm = Object.FindObjectOfType<NetworkGameManager>();
+            bool raceActive = gm == null || gm.Phase.Value == RacePhase.Race;
             if (IsOwner && IsClient)
             {
                 // Prediction step on client when not server
                 if (!IsServer)
                 {
-                    StepAndApply(dt, _locThrottle, _locSteer, _locBrake, _locDrift, _locBoost, RotationSpeedDeg);
+                    float th = raceActive ? _locThrottle : 0f;
+                    float st = raceActive ? _locSteer : 0f;
+                    bool br = raceActive && _locBrake;
+                    bool dr = raceActive && _locDrift;
+                    bool bo = raceActive && _locBoost;
+                    var cmd = new InputCmd { tick = _localTick, th = th, st = st, br = br, dr = dr, bo = bo };
+                    _inputBuf.Add(cmd);
+                    StepAndApply(dt, cmd.th, cmd.st, cmd.br, cmd.dr, cmd.bo, RotationSpeedDeg);
+                    _stateBuf.Add(new PredState { tick = _localTick, pos = transform.position, yaw = transform.eulerAngles.y, motor = _motor.Capture() });
+                    if (_inputBuf.Count > 512) _inputBuf.RemoveRange(0, _inputBuf.Count - 512);
+                    if (_stateBuf.Count > 512) _stateBuf.RemoveRange(0, _stateBuf.Count - 512);
                 }
                 // Send input to server each fixed step
-                SubmitInputServerRpc(_locThrottle, _locSteer, _locBrake, _locDrift, _locBoost);
+                SubmitInputServerRpc(
+                    raceActive ? _locThrottle : 0f,
+                    raceActive ? _locSteer : 0f,
+                    raceActive && _locBrake,
+                    raceActive && _locDrift,
+                    raceActive && _locBoost,
+                    _localTick);
+                _localTick++;
             }
 
             if (IsServer)
             {
                 // Authoritative physics on server: drive Rigidbody velocity and rotation
-                var (delta, targetYaw) = _motor.Step(dt, _inThrottle, _inSteer, _inBrake, _inDrift, _inBoost);
+                float th = raceActive ? _inThrottle : 0f;
+                float st = raceActive ? _inSteer : 0f;
+                bool br = raceActive && _inBrake;
+                bool dr = raceActive && _inDrift;
+                bool bo = raceActive && _inBoost;
+                var (delta, targetYaw) = _motor.Step(dt, th, st, br, dr, bo);
                 ApplyTransform(delta, targetYaw, RotationSpeedDeg);
                 NetPos.Value = transform.position;
                 NetYaw.Value = transform.eulerAngles.y;
+                // Send owner authoritative snapshot for reconciliation (only if owner is a remote client)
+                if (OwnerClientId != NetworkManager.ServerClientId)
+                {
+                    var sendTo = new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { OwnerClientId } } };
+                    OwnerStateClientRpc(transform.position, transform.eulerAngles.y, _serverTick, _lastClientTickReceivedByServer, sendTo);
+                }
+                _serverTick++;
                 if (VerboseLogs && Time.time - _lastInputLogTime > 0.5f)
                 {
                     _lastInputLogTime = Time.time;
@@ -209,11 +239,11 @@ namespace PiggyRace.Networking
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void SubmitInputServerRpc(float throttle, float steer, bool brake, bool drift, bool boost, ServerRpcParams rpcParams = default)
+        private void SubmitInputServerRpc(float throttle, float steer, bool brake, bool drift, bool boost, int clientTick, ServerRpcParams rpcParams = default)
         {
             if (VerboseLogs)
             {
-                Debug.Log($"[NetworkPig] Server received input from {rpcParams.Receive.SenderClientId} for pig owned by {OwnerClientId} thr={throttle:F2} st={steer:F2}");
+                Debug.Log($"[NetworkPig] Server received input from {rpcParams.Receive.SenderClientId} for pig owned by {OwnerClientId} thr={throttle:F2} st={steer:F2} tick={clientTick}");
             }
             if (rpcParams.Receive.SenderClientId != OwnerClientId)
             {
@@ -225,6 +255,7 @@ namespace PiggyRace.Networking
             _inBrake = brake;
             _inDrift = drift;
             _inBoost = boost;
+            _lastClientTickReceivedByServer = clientTick;
 
             // Acknowledge back to the sender (owner) for debugging the pipeline
             var sendTo = new ClientRpcParams
@@ -315,6 +346,42 @@ namespace PiggyRace.Networking
                 transform.position = pos;
                 transform.rotation = Quaternion.Euler(0f, yaw, 0f);
             }
+        }
+
+        [ClientRpc]
+        private void OwnerStateClientRpc(Vector3 pos, float yaw, int serverTick, int echoedClientTick, ClientRpcParams clientRpcParams = default)
+        {
+            if (!IsOwner || IsServer) return;
+            int idx = _stateBuf.FindIndex(s => s.tick == echoedClientTick);
+            if (idx < 0) return;
+            var predictedAtEcho = _stateBuf[idx];
+            float posErr = (predictedAtEcho.pos - pos).magnitude;
+            float yawErr = Mathf.Abs(Mathf.DeltaAngle(predictedAtEcho.yaw, yaw));
+            if (posErr < OwnerReconcileThreshold && yawErr < 5f) return;
+
+            // Rewind to echoed tick and replay
+            _motor.Restore(predictedAtEcho.motor);
+            Vector3 rewindPos = pos;
+            float rewindYaw = yaw;
+            SetTransform(rewindPos, rewindYaw);
+
+            for (int i = idx + 1; i < _stateBuf.Count; i++)
+            {
+                int t = _stateBuf[i].tick;
+                // find matching input
+                for (int j = 0; j < _inputBuf.Count; j++)
+                {
+                    if (_inputBuf[j].tick == t)
+                    {
+                        var c = _inputBuf[j];
+                        var step = _motor.Step(Time.fixedDeltaTime, c.th, c.st, c.br, c.dr, c.bo);
+                        rewindPos += new Vector3(step.deltaXZ.x, 0f, step.deltaXZ.y);
+                        rewindYaw = step.yawDeg;
+                        break;
+                    }
+                }
+            }
+            SetTransform(rewindPos, rewindYaw);
         }
     }
 }
