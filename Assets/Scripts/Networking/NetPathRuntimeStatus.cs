@@ -1,7 +1,7 @@
 namespace PiggyRace.Networking
 {
     // Simple global bag of status about how networking was started.
-    // Set by NetworkHubUI; read by UI (e.g., NetworkStatusUI) to display a badge and details.
+    // Set by NetworkBootstrap/UI; read by UI (e.g., NetworkStatusUI) to display a badge and details.
     public static class NetPathRuntimeStatus
     {
         // True when started via UGS Multiplayer/Relay flow; false when started via direct NGO (IP/port)

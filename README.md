@@ -28,7 +28,7 @@ Current status (snapshot)
 Key scripts (implemented)
 - Networking: `Assets/Scripts/Networking/NetworkPig.cs`, `PlayerSpawner.cs`, `MovementValidator.cs`.
 - Race: `Assets/Scripts/Gameplay/Race/{TrackManager.cs,Checkpoint.cs,LapTracker.cs,LapTrackerLogic.cs}`.
-- UI: `Assets/Scripts/UI/RaceStatusUI.cs`, `Assets/Scripts/UI/NetworkStatusUI.cs`, `Assets/Scripts/UI/NetworkHubUI.cs`.
+- UI: `Assets/Scripts/UI/RaceStatusUI.cs`, `Assets/Scripts/UI/NetworkStatusUI.cs`.
 - UGS glue: `Assets/Scripts/Networking/UGS/{RelayLobbyService.cs,RelayLobbyUI.cs,MultiplayerServicesConnector.cs}`.
  - Visuals: `Assets/Scripts/Gameplay/Pig/PigVisualController.cs` (anim + particles by speed).
 

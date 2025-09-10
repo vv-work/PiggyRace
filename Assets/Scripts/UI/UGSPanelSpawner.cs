@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using PiggyRace.UI;
+using PiggyRace.Networking;
 
 namespace PiggyRace.UI
 {
@@ -14,22 +14,19 @@ namespace PiggyRace.UI
         public Vector2 anchoredPosition = new Vector2(20, 20);
         public Vector2 size = new Vector2(420, 180);
 
-        private NetworkHubUI _hub;
+        private NetworkBootstrap _bootstrap;
 
         void Awake()
         {
-            _hub = FindObjectOfType<NetworkHubUI>();
+            _bootstrap = FindObjectOfType<NetworkBootstrap>();
         }
 
         void Start()
         {
-            if (_hub == null)
+            if (_bootstrap == null)
             {
-                _hub = FindObjectOfType<NetworkHubUI>();
-                if (_hub == null)
-                {
-                    Debug.LogWarning("[UGSPanelSpawner] NetworkHubUI not found; panel will still be created but won’t function.");
-                }
+                _bootstrap = FindObjectOfType<NetworkBootstrap>();
+                if (_bootstrap == null) Debug.LogWarning("[UGSPanelSpawner] NetworkBootstrap not found; panel will still be created but won’t function.");
             }
 
             if (GameObject.Find("UGS Panel") != null) return; // already present
@@ -125,42 +122,11 @@ namespace PiggyRace.UI
             }
 
             // Wire buttons
-            var initBtn = AddButton("Initialize", new Vector2(10, 10), "Initialize", () => _hub?.InitializeUGS());
-            var hostBtn = AddButton("Host", new Vector2(10 + (size.x - 30) / 3f + 5, 10), "Host", () => _hub?.HostUGS());
-            var joinBtn = AddButton("Join", new Vector2(10 + 2 * ((size.x - 30) / 3f + 5), 10), "Join", () => _hub?.JoinUGS());
-
-            // Hook fields into NetworkHubUI
-            if (_hub != null)
-            {
-                NetworkHubUIRuntimeExtensions.JoinCodeInput = input;
-                NetworkHubUIRuntimeExtensions.StatusText = statusText;
-            }
+            var initBtn = AddButton("Initialize", new Vector2(10, 10), "Initialize", () => _bootstrap?.InitializeUGS());
+            var hostBtn = AddButton("Host", new Vector2(10 + (size.x - 30) / 3f + 5, 10), "Host", () => _bootstrap?.HostUGS());
+            var joinBtn = AddButton("Join", new Vector2(10 + 2 * ((size.x - 30) / 3f + 5), 10), "Join", () => _bootstrap?.JoinUGS());
         }
     }
 
-    // Small extensions as properties if fields are private; reflected by Unity via SerializeField, but here we can set via code.
-    public static class NetworkHubUIRuntimeExtensions
-    {
-        public static TMP_InputField JoinCodeInput
-        {
-            set
-            {
-                var hub = Object.FindObjectOfType<NetworkHubUI>();
-                if (hub == null) return;
-                var field = typeof(NetworkHubUI).GetField("joinCodeInput", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                field?.SetValue(hub, value);
-            }
-        }
-
-        public static TextMeshProUGUI StatusText
-        {
-            set
-            {
-                var hub = Object.FindObjectOfType<NetworkHubUI>();
-                if (hub == null) return;
-                var field = typeof(NetworkHubUI).GetField("statusText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                field?.SetValue(hub, value);
-            }
-        }
-    }
+    // No extra runtime wiring is required; NetworkBootstrap.JoinUGS searches for a TMP_InputField if none assigned.
 }

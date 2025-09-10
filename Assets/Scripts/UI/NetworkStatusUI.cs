@@ -91,7 +91,7 @@ namespace PiggyRace.UI
             }
             catch { }
 #endif
-            // Fallback to runtime status set by NetworkHubUI
+            // Fallback to runtime status set by NetworkBootstrap/UI
             return NetPathRuntimeStatus.UsingUgs;
         }
 
