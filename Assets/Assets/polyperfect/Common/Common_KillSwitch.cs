@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if HAVE_INPUTSYSTEM
+using UnityEngine.InputSystem; // New Input System
+#endif
 
 namespace Polyperfect.Common
 {
@@ -20,9 +23,18 @@ namespace Polyperfect.Common
         // Update is called once per frame
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1))
+#if HAVE_INPUTSYSTEM
+            var kb = Keyboard.current;
+            if (kb != null && kb.digit1Key.wasPressedThisFrame)
+            {
                 anim.SetBool("isDead", true);
-
+            }
+#else
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                anim.SetBool("isDead", true);
+            }
+#endif
         }
     }
 }

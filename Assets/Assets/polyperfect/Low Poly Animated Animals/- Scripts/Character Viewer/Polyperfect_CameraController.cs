@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+#if HAVE_INPUTSYSTEM
+using UnityEngine.InputSystem; // New Input System
+#endif
 
 namespace Polyperfect.Animals
 {
@@ -27,43 +30,77 @@ namespace Polyperfect.Animals
         // Update is called once per frame
         void Update()
         {
+            // Read mouse position
+#if HAVE_INPUTSYSTEM
+            if (Mouse.current != null)
+                mousePos = Mouse.current.position.ReadValue();
+#else
             mousePos = Input.mousePosition;
+#endif
 
-            if (Input.GetMouseButtonDown(0))
+            // Mouse button state (left)
+            bool leftDown = false, leftUp = false, leftHeld = false;
+#if HAVE_INPUTSYSTEM
+            leftDown = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+            leftUp = Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame;
+            leftHeld = Mouse.current != null && Mouse.current.leftButton.isPressed;
+#else
+            leftDown = Input.GetMouseButtonDown(0);
+            leftUp = Input.GetMouseButtonUp(0);
+            leftHeld = Input.GetMouseButton(0);
+#endif
+
+            if (leftDown)
             {
                 clickedPosition = mousePos;
-            }
-
-            if (Input.GetMouseButtonDown(0))
-            {
                 canControl = true;
             }
 
-            if (Input.GetMouseButtonUp(0))
+            if (leftUp)
             {
                 canControl = false;
             }
 
-            if (!EventSystem.current.IsPointerOverGameObject())
+            // Detect if pointer is over UI (Input System UI module compatible)
+            bool overUI = false;
+            if (EventSystem.current != null)
             {
-                mainCam.fieldOfView += -Input.GetAxis("Mouse ScrollWheel") * zoomSpeed;
-                mainCam.fieldOfView = Mathf.Clamp(mainCam.fieldOfView, ZoomDistanceMinMax.x, ZoomDistanceMinMax.y);
+                int pointerId = -1; // default mouse pointer id
+#if HAVE_INPUTSYSTEM
+                try { pointerId = UnityEngine.InputSystem.UI.PointerId.mousePointerId; } catch { pointerId = -1; }
+#endif
+                overUI = EventSystem.current.IsPointerOverGameObject(pointerId);
             }
 
+            if (!overUI)
+            {
+                // Scroll wheel
+                float scrollY = 0f;
+#if HAVE_INPUTSYSTEM
+                scrollY = Mouse.current != null ? Mouse.current.scroll.ReadValue().y : 0f;
+#else
+                scrollY = Input.GetAxis("Mouse ScrollWheel") * 120f; // match normalization below
+#endif
+                mainCam.fieldOfView += -(scrollY / 120f) * zoomSpeed; // normalize typical 120 units per notch
+                mainCam.fieldOfView = Mathf.Clamp(mainCam.fieldOfView, ZoomDistanceMinMax.x, ZoomDistanceMinMax.y);
+            }
             else
             {
                 canControl = false;
             }
 
-            if (canControl)
+            if (canControl && leftHeld)
             {
                 var dragDirection = clickedPosition - mousePos;
 
                 if (dragDirection.magnitude > threshold)
+                {
+                    float speed = Time.deltaTime * dragDirection.magnitude;
                     if (mousePos.x > clickedPosition.x)
-                        podium.RotateAround(target.position, -target.transform.up, Time.deltaTime * dragDirection.magnitude);
+                        podium.RotateAround(target.position, -target.transform.up, speed);
                     else
-                        podium.RotateAround(target.position, target.transform.up, Time.deltaTime * dragDirection.magnitude);
+                        podium.RotateAround(target.position, target.transform.up, speed);
+                }
             }
         }
     }

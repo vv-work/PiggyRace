@@ -1,8 +1,10 @@
 {
     "name": "Polyperfect.Animals",
+    "rootNamespace": "",
     "references": [
         "Polyperfect.Common",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
