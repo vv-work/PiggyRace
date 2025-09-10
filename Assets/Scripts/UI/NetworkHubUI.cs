@@ -22,6 +22,9 @@ namespace PiggyRace.UI
         [Header("Settings")]
         [SerializeField] private int maxConnections = 8;
 
+        // Tracks whether we are using the UGS path (Multiplayer/Relay buttons)
+        private bool _usingUgsPath = false;
+
         void Start()
         {
             // If no UI is wired, spawn a minimal panel at runtime.
@@ -41,6 +44,7 @@ namespace PiggyRace.UI
         public async void InitializeUGS()
         {
             EnsureRefs();
+            _usingUgsPath = true; PiggyRace.Networking.NetPathRuntimeStatus.UsingUgs = true; PiggyRace.Networking.NetPathRuntimeStatus.IsHost = false; PiggyRace.Networking.NetPathRuntimeStatus.JoinCode = null;
             SetStatus("Initializing UGS...");
             bool ok = await ugs.InitializeUGSAsync();
             SetStatus(ok ? "UGS Ready" : "UGS Init Failed");
@@ -49,9 +53,13 @@ namespace PiggyRace.UI
         public async void HostUGS()
         {
             EnsureRefs();
+            _usingUgsPath = true; PiggyRace.Networking.NetPathRuntimeStatus.UsingUgs = true; PiggyRace.Networking.NetPathRuntimeStatus.IsHost = true;
             SetStatus("Creating session...");
             var code = await ugs.CreateJoinCodeAsync(maxConnections);
             if (string.IsNullOrEmpty(code)) { SetStatus("Session/Relay allocation failed"); return; }
+            PiggyRace.Networking.NetPathRuntimeStatus.JoinCode = code;
+            PiggyRace.Networking.NetPathRuntimeStatus.Address = null;
+            PiggyRace.Networking.NetPathRuntimeStatus.Port = 0;
             SetStatus($"Join Code: {code}");
             // Note: With Multiplayer package installed, NGO Host/Client auto-starts via the package handler.
         }
@@ -59,18 +67,43 @@ namespace PiggyRace.UI
         public async void JoinUGS()
         {
             EnsureRefs();
+            _usingUgsPath = true; PiggyRace.Networking.NetPathRuntimeStatus.UsingUgs = true; PiggyRace.Networking.NetPathRuntimeStatus.IsHost = false;
             var code = (joinCodeInput != null ? joinCodeInput.text : null)?.Trim();
             if (string.IsNullOrEmpty(code)) { SetStatus("Enter Join Code"); return; }
             SetStatus("Joining session...");
             bool ok = await ugs.JoinByCodeAsync(code);
+            if (ok)
+            {
+                PiggyRace.Networking.NetPathRuntimeStatus.JoinCode = code;
+                PiggyRace.Networking.NetPathRuntimeStatus.Address = null;
+                PiggyRace.Networking.NetPathRuntimeStatus.Port = 0;
+            }
             SetStatus(ok ? "Joined" : "Join failed");
         }
 
         // ---- Direct NGO path ----
-        public void HostDirect() => ngo?.StartHost();
-        public void ClientDirect() => ngo?.StartClient();
-        public void ServerDirect() => ngo?.StartServer();
-        public void Shutdown() => ngo?.Shutdown();
+        public void HostDirect()
+        {
+            _usingUgsPath = false; PiggyRace.Networking.NetPathRuntimeStatus.Reset();
+            PiggyRace.Networking.NetPathRuntimeStatus.UsingUgs = false; PiggyRace.Networking.NetPathRuntimeStatus.IsHost = true;
+            try { var utp = Unity.Netcode.NetworkManager.Singleton?.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>(); if (utp != null) { PiggyRace.Networking.NetPathRuntimeStatus.Address = utp.ConnectionData.Address; PiggyRace.Networking.NetPathRuntimeStatus.Port = utp.ConnectionData.Port; } } catch {}
+            SetStatus("Starting Host (Direct)"); ngo?.StartHost();
+        }
+        public void ClientDirect()
+        {
+            _usingUgsPath = false; PiggyRace.Networking.NetPathRuntimeStatus.Reset();
+            PiggyRace.Networking.NetPathRuntimeStatus.UsingUgs = false; PiggyRace.Networking.NetPathRuntimeStatus.IsHost = false;
+            try { var utp = Unity.Netcode.NetworkManager.Singleton?.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>(); if (utp != null) { PiggyRace.Networking.NetPathRuntimeStatus.Address = utp.ConnectionData.Address; PiggyRace.Networking.NetPathRuntimeStatus.Port = utp.ConnectionData.Port; } } catch {}
+            SetStatus("Starting Client (Direct)"); ngo?.StartClient();
+        }
+        public void ServerDirect()
+        {
+            _usingUgsPath = false; PiggyRace.Networking.NetPathRuntimeStatus.Reset();
+            PiggyRace.Networking.NetPathRuntimeStatus.UsingUgs = false; PiggyRace.Networking.NetPathRuntimeStatus.IsHost = false;
+            try { var utp = Unity.Netcode.NetworkManager.Singleton?.GetComponent<Unity.Netcode.Transports.UTP.UnityTransport>(); if (utp != null) { PiggyRace.Networking.NetPathRuntimeStatus.Address = utp.ConnectionData.ServerListenAddress; PiggyRace.Networking.NetPathRuntimeStatus.Port = utp.ConnectionData.Port; } } catch {}
+            SetStatus("Starting Server (Direct)"); ngo?.StartServer();
+        }
+        public void Shutdown() { SetStatus("Shutdown"); ngo?.Shutdown(); }
 
         // ---- Race controls ----
         public void StartCountdown() => ngo?.StartCountdown();
@@ -85,7 +118,8 @@ namespace PiggyRace.UI
 
         private void SetStatus(string s)
         {
-            if (statusText != null) statusText.text = s;
+            var badge = _usingUgsPath ? "✅ UGS" : "❌ UGS";
+            if (statusText != null) statusText.text = $"{badge}  {s}";
             else Debug.Log($"[NetworkHubUI] {s}");
         }
 
