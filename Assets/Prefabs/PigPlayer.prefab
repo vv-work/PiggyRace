@@ -153,7 +153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: PiggyRace.Runtime::PiggyRace.Networking.NetworkPig
   ShowTopMostFoldoutHeaderGroup: 1
   VerboseLogs: 0
-  Authority: 1
+  Authority: 0
   MaxSpeed: 64
   ReverseSpeed: 8
   Accel: 20

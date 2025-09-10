@@ -77,6 +77,9 @@ namespace PiggyRace.Networking
         public override void OnNetworkSpawn()
         {
             _rb = GetComponent<Rigidbody>();
+            // Disable NetworkTransform if present; we handle sync manually for prediction/smoothing
+            var nt = GetComponent<Unity.Netcode.Components.NetworkTransform>();
+            if (nt != null) nt.enabled = false;
             if (_rb != null)
             {
                 if (Authority == AuthorityMode.ServerAuthoritative)
@@ -113,10 +116,18 @@ namespace PiggyRace.Networking
                 NetPos.Value = transform.position;
                 NetYaw.Value = yaw;
                 var gm = Object.FindObjectOfType<NetworkGameManager>();
-                if (gm != null && gm.Phase.Value != RacePhase.Lobby)
+                if (gm != null)
                 {
-                    // Late joiners during active race become spectators
-                    IsSpectator.Value = true;
+                    // Only block input during Countdown. If not in countdown, allow immediate driving.
+                    if (gm.Phase.Value == RacePhase.Countdown)
+                    {
+                        IsSpectator.Value = true;
+                        gm.Phase.OnValueChanged += OnPhaseChangedServer;
+                    }
+                    else
+                    {
+                        IsSpectator.Value = false;
+                    }
                 }
             }
 
@@ -142,6 +153,29 @@ namespace PiggyRace.Networking
             {
                 NetPos.OnValueChanged -= OnNetPosChanged;
                 NetYaw.OnValueChanged -= OnNetYawChanged;
+            }
+            if (IsServer)
+            {
+                var gm = Object.FindObjectOfType<NetworkGameManager>();
+                if (gm != null)
+                {
+                    gm.Phase.OnValueChanged -= OnPhaseChangedServer;
+                }
+            }
+        }
+
+        // Server-side: when countdown finishes, drop spectators into active state so they can drive
+        private void OnPhaseChangedServer(RacePhase previous, RacePhase next)
+        {
+            if (!IsServer) return;
+            if (next == RacePhase.Race)
+            {
+                IsSpectator.Value = false;
+                var gm = Object.FindObjectOfType<NetworkGameManager>();
+                if (gm != null)
+                {
+                    gm.Phase.OnValueChanged -= OnPhaseChangedServer;
+                }
             }
         }
 
