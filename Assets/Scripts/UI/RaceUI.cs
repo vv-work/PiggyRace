@@ -8,7 +8,7 @@ namespace PiggyRace.UI
 {
     // Minimal HUD showing Phase, Countdown, and Lap/Total for the local player.
     [DisallowMultipleComponent]
-    public class RaceHUD : MonoBehaviour
+    public class RaceUI : MonoBehaviour
     {
         [SerializeField] private TMP_Text targetText; // assign a TextMeshProUGUI in the Canvas
         [SerializeField] private string format = "Phase: {0}  |  Countdown: {1:0.0}  |  Lap: {2}/{3}  |  CP: {4}/{5}";
@@ -74,3 +74,4 @@ namespace PiggyRace.UI
         }
     }
 }
+

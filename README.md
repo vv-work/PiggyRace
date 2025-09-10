@@ -28,7 +28,7 @@ Current status (snapshot)
 Key scripts (implemented)
 - Networking: `Assets/Scripts/Networking/NetworkPig.cs`, `PlayerSpawner.cs`, `MovementValidator.cs`.
 - Race: `Assets/Scripts/Gameplay/Race/{TrackManager.cs,Checkpoint.cs,LapTracker.cs,LapTrackerLogic.cs}`.
-- UI: `Assets/Scripts/UI/RaceHUD.cs`.
+- UI: `Assets/Scripts/UI/RaceStatusUI.cs`.
 - UGS glue: `Assets/Scripts/Networking/UGS/{RelayLobbyService.cs,RelayLobbyUI.cs,MultiplayerServicesConnector.cs}`.
 
 ## Architecture Snapshot
@@ -123,11 +123,11 @@ License: TBD
 - Quick action: `Tools → PiggyRace → Create Track Loop (Quick)` uses defaults to create a loop fast.
 
 ## Minimal Race HUD
-- Component: `PiggyRace.UI.RaceHUD`
+- Component: `PiggyRace.UI.RaceStatusUI`
 - Shows: `Phase`, `Countdown`, and local `Lap/Total` using a TMP Text.
 - How to use:
   - Create a Canvas → TextMeshPro - Text (UI) in your scene.
-  - Add `RaceHUD` to the TMP object and assign its `TMP_Text` field (or let it auto-grab).
+  - Add `RaceStatusUI` to the TMP object and assign its `TMP_Text` field (or let it auto-grab).
   - Ensure your player prefab has `LapTracker` and the scene has `NetworkGameManager`.
 
 
